@@ -1,4 +1,7 @@
 ﻿<Solution>
   <Project Path="Assembly-CSharp-Editor.csproj" />
+  <Project Path="DiceBattler.Runtime.csproj" />
+  <Project Path="DiceBattler.Editor.csproj" />
+  <Project Path="DiceBattler.Tests.EditMode.csproj" />
   <Project Path="Assembly-CSharp.csproj" />
 </Solution>
