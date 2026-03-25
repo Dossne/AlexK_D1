@@ -194,10 +194,10 @@ namespace DiceBattler.Runtime
             runSession.RerollsRemaining = rerollBudget.Remaining;
             diceController.BeginTurn(runSession.UnlockedDiceCount, rerollBudget.Remaining);
             diceController.RollAllUnlocked();
-            diceController.SetShowingResultForUnlocked();
+            diceController.SetShowingResultForRollingDice();
             UpdateDicePresentation();
             yield return new WaitForSeconds(contentSet.runConfig.diceHighlightDuration);
-            diceController.SetReadyForUnlocked();
+            diceController.SetReadyForRollingDice();
             latestDamage = damageCalculationService.Calculate(diceController.GetUnlockedValues(), runSession.FlatDamageBonus);
             UpdateHudValues();
             UpdateDicePresentation();
@@ -240,10 +240,10 @@ namespace DiceBattler.Runtime
 
         private IEnumerator ResolveReroll()
         {
-            diceController.SetShowingResultForUnlocked();
+            diceController.SetShowingResultForRollingDice();
             UpdateDicePresentation();
             yield return new WaitForSeconds(contentSet.runConfig.diceHighlightDuration);
-            diceController.SetReadyForUnlocked();
+            diceController.SetReadyForRollingDice();
             latestDamage = damageCalculationService.Calculate(diceController.GetUnlockedValues(), runSession.FlatDamageBonus);
             UpdateHudValues();
             currentPhase = CombatFlowPhase.PlayerDecision;

@@ -6,6 +6,7 @@ using DiceBattler.Presentation;
 using DiceBattler.Runtime;
 using NUnit.Framework;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace DiceBattler.Tests
@@ -29,6 +30,24 @@ namespace DiceBattler.Tests
             Assert.That(after[0], Is.EqualTo(5));
             Assert.That(after[1], Is.EqualTo(6));
             Assert.That(after[2], Is.EqualTo(4));
+        }
+
+        [Test]
+        public void PrefixRerollOnlyUpdatesVisualStateForTappedDieAndToTheLeft()
+        {
+            StubRandomService random = new StubRandomService(2, 3, 4, 5, 6);
+            DiceController controller = new DiceController(5, random);
+            controller.BeginTurn(3, 3);
+            controller.RollAllUnlocked();
+            controller.SetShowingResultForRollingDice();
+            controller.SetReadyForRollingDice();
+
+            controller.TryRerollPrefix(0);
+            controller.SetShowingResultForRollingDice();
+
+            Assert.That(controller.Dice[0].State, Is.EqualTo(DieVisualState.ShowingResult));
+            Assert.That(controller.Dice[1].State, Is.EqualTo(DieVisualState.Ready));
+            Assert.That(controller.Dice[2].State, Is.EqualTo(DieVisualState.Ready));
         }
 
         [Test]
@@ -249,6 +268,101 @@ namespace DiceBattler.Tests
         }
 
         [Test]
+        public void DiePresenterClickUsesDisplayedModelIndex()
+        {
+            GameObject root = new GameObject("DiePresenterTest");
+            try
+            {
+                DiePresenter presenter = root.AddComponent<DiePresenter>();
+                int clickedIndex = -1;
+                presenter.Bind(0, index => clickedIndex = index);
+
+                presenter.SetState(new DieRuntimeModel
+                {
+                    Index = 3,
+                    IsUnlocked = true,
+                    State = DieVisualState.Ready,
+                    ResolvedValue = 5,
+                }, true);
+
+                presenter.OnPointerClick(new PointerEventData(EventSystem.current));
+
+                Assert.That(clickedIndex, Is.EqualTo(3));
+            }
+            finally
+            {
+                Object.DestroyImmediate(root);
+            }
+        }
+
+        [Test]
+        public void DiePresenterClickUpdatesWhenDisplayedModelChanges()
+        {
+            GameObject root = new GameObject("DiePresenterRemapTest");
+            try
+            {
+                DiePresenter presenter = root.AddComponent<DiePresenter>();
+                int clickedIndex = -1;
+                presenter.Bind(4, index => clickedIndex = index);
+
+                presenter.SetState(new DieRuntimeModel
+                {
+                    Index = 1,
+                    IsUnlocked = true,
+                    State = DieVisualState.Ready,
+                    ResolvedValue = 2,
+                }, true);
+                presenter.SetState(new DieRuntimeModel
+                {
+                    Index = 0,
+                    IsUnlocked = true,
+                    State = DieVisualState.Ready,
+                    ResolvedValue = 6,
+                }, true);
+
+                presenter.OnPointerClick(new PointerEventData(EventSystem.current));
+
+                Assert.That(clickedIndex, Is.EqualTo(0));
+            }
+            finally
+            {
+                Object.DestroyImmediate(root);
+            }
+        }
+
+        [Test]
+        public void OutOfOrderDiePresenterStillRerollsDisplayedPrefix()
+        {
+            StubRandomService random = new StubRandomService(2, 3, 4, 5, 6, 1, 1, 1);
+            DiceController controller = new DiceController(5, random);
+            controller.BeginTurn(3, 3);
+            controller.RollAllUnlocked();
+
+            GameObject root = new GameObject("OutOfOrderDiePresenterTest");
+            try
+            {
+                DiePresenter presenter = root.AddComponent<DiePresenter>();
+                int forwardedIndex = -1;
+                presenter.Bind(2, index => forwardedIndex = index);
+                presenter.SetState(controller.Dice[1], true);
+
+                presenter.OnPointerClick(new PointerEventData(EventSystem.current));
+
+                Assert.That(forwardedIndex, Is.EqualTo(1));
+                controller.TryRerollPrefix(forwardedIndex);
+
+                List<int> values = controller.GetUnlockedValues();
+                Assert.That(values[0], Is.EqualTo(5));
+                Assert.That(values[1], Is.EqualTo(6));
+                Assert.That(values[2], Is.EqualTo(4));
+            }
+            finally
+            {
+                Object.DestroyImmediate(root);
+            }
+        }
+
+        [Test]
         public void ImportValidationCatchesDuplicateIdsAndBrokenWaveReferences()
         {
             ImportedGameData data = CreateValidImportedData();
@@ -393,7 +507,8 @@ namespace DiceBattler.Tests
             DiceController controller = new DiceController(5, new StubRandomService(1, 2, 3, 4, 5, 6, 6));
             controller.BeginTurn(5, 3);
             controller.RollAllUnlocked();
-            controller.SetReadyForUnlocked();
+            controller.SetShowingResultForRollingDice();
+            controller.SetReadyForRollingDice();
             return controller;
         }
 

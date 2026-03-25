@@ -90,22 +90,22 @@ namespace DiceBattler.Runtime
             return true;
         }
 
-        public void SetShowingResultForUnlocked()
+        public void SetShowingResultForRollingDice()
         {
             for (int index = 0; index < dice.Count; index++)
             {
-                if (dice[index].IsUnlocked)
+                if (dice[index].State == DieVisualState.Rolling)
                 {
                     dice[index].State = DieVisualState.ShowingResult;
                 }
             }
         }
 
-        public void SetReadyForUnlocked()
+        public void SetReadyForRollingDice()
         {
             for (int index = 0; index < dice.Count; index++)
             {
-                if (dice[index].IsUnlocked)
+                if (dice[index].State == DieVisualState.ShowingResult || dice[index].State == DieVisualState.Rolling)
                 {
                     dice[index].State = DieVisualState.Ready;
                 }

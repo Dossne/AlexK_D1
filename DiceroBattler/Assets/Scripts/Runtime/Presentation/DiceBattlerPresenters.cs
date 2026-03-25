@@ -366,6 +366,8 @@ namespace DiceBattler.Presentation
 
         public void SetState(DieRuntimeModel model, bool canInteract)
         {
+            dieIndex = model.Index;
+
             if (valueText != null)
             {
                 valueText.text = model.IsUnlocked ? model.ResolvedValue.ToString() : "X";
