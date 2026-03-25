@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 0}
+  m_Name: PrototypeContentSet
+  m_EditorClassIdentifier: DiceBattler.Runtime:DiceBattler.Configs:PrototypeContentSet
+  heroConfig: {fileID: 11400000, guid: 14caf98894c12426ab049173a1caf0d0, type: 2}
+  mobDatabase: {fileID: 11400000, guid: 2d5a37353f7e8423aada3db6c49eabeb, type: 2}
+  waveDatabase: {fileID: 11400000, guid: 81ec5c139bbdc493b8e468f3404a917f, type: 2}
+  combinationDatabase: {fileID: 11400000, guid: 1c3dfe3dc23e5412c948297baa9a1efa, type: 2}
+  upgradeDatabase: {fileID: 11400000, guid: d0a10cf093bc34ee69c2d5fcc94d57bf, type: 2}
+  progressionDatabase: {fileID: 11400000, guid: 8bb8b4d756ce34d8db90f44ea1b5c0cb, type: 2}
+  runConfig: {fileID: 11400000, guid: 22a60f301b2604c36b772bd7b29ee5eb, type: 2}
+  heroPrefabRegistry: {fileID: 11400000, guid: 6a029245d2e634cf6ba2cdf2d75f7953, type: 2}
+  mobPrefabRegistry: {fileID: 11400000, guid: 4340221f1442b40cc9154b66836ceeda, type: 2}
+  uiSkinRegistry: {fileID: 11400000, guid: ec074be4f558f4665bbed03c012e33e4, type: 2}
+  vfxRegistry: {fileID: 11400000, guid: d1e8b291379e34aa1acf2c97b9e5a4c0, type: 2}

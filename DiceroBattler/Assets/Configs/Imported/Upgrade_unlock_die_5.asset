@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 0}
+  m_Name: Upgrade_unlock_die_5
+  m_EditorClassIdentifier: DiceBattler.Runtime:DiceBattler.Configs:UpgradeConfig
+  upgradeId: unlock_die_5
+  type: 0
+  title: Add Die
+  description: Unlock one more die
+  value: 1
+  eligibleFromLevel: 1
+  enabled: 1
+  targetDiceCount: 5
+  uiIconKey: upgrade_die

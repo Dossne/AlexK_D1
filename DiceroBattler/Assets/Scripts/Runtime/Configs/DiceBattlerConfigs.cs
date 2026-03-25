@@ -194,6 +194,7 @@ namespace DiceBattler.Configs
     [CreateAssetMenu(menuName = "Dice Battler/Configs/Import Settings", fileName = "SheetsImportSettings")]
     public sealed class SheetsImportSettings : ScriptableObject
     {
+        public string googleSheetUrl = "https://docs.google.com/spreadsheets/d/1ocPHKALVIMOhgBFsvG_mnZk3aFEVDNsVOsuQ9Y98wEQ/edit?usp=sharing";
         public string csvFolderPath = "Assets/Data/ImportedCsv";
         public string outputFolderPath = "Assets/Configs/Imported";
         public string spreadsheetId = "1ocPHKALVIMOhgBFsvG_mnZk3aFEVDNsVOsuQ9Y98wEQ";

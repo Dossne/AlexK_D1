@@ -13,8 +13,13 @@ namespace DiceBattler.Boot
         {
             if (contentSet == null)
             {
+                contentSet = Resources.Load<PrototypeContentSet>("DiceBattler/PrototypeContentSet");
+            }
+
+            if (contentSet == null)
+            {
                 contentSet = PrototypeRuntimeFactory.CreateInMemoryContentSet();
-                Debug.LogWarning("GameBootstrap is using an in-memory default content set because no PrototypeContentSet asset was assigned.");
+                Debug.LogWarning("GameBootstrap is using an in-memory default content set because no PrototypeContentSet asset was assigned or found in Resources.");
             }
 
             if (combatSceneInstaller == null)

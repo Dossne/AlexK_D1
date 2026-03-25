@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 0}
+  m_Name: MobDatabase
+  m_EditorClassIdentifier: DiceBattler.Runtime:DiceBattler.Configs:MobDatabase
+  mobs:
+  - {fileID: 11400000, guid: 60893e56c8d17498696aaea666e9d62a, type: 2}
+  - {fileID: 11400000, guid: 6e5eb1f645c6a4f2f9371f81d1bba727, type: 2}
+  - {fileID: 11400000, guid: 25eea1e03cb304fb38cf928ee7ef7f38, type: 2}
+  - {fileID: 11400000, guid: fbc711307d10e4f28bb53fe2991a1e2b, type: 2}
+  - {fileID: 11400000, guid: c8564a25433dc415ab75be2ed0ac4bc6, type: 2}
+  - {fileID: 11400000, guid: 61c0cf5ad236d4d698add8970e66feb8, type: 2}
+  - {fileID: 11400000, guid: 3c158af9bbbc54cc39bf122183d225fe, type: 2}
+  - {fileID: 11400000, guid: c7e7f6d50f9924ef2a06129d911ce0f5, type: 2}
+  - {fileID: 11400000, guid: da5b1e7eca16149df9e70846842584eb, type: 2}
+  - {fileID: 11400000, guid: de02371c7fa264b7089658a35aa8017b, type: 2}
+  - {fileID: 11400000, guid: 7b56e27cfd91a41d3b0326d58dea8711, type: 2}
+  - {fileID: 11400000, guid: 52b2d593ebbaf4840a94dc56357069f3, type: 2}
+  - {fileID: 11400000, guid: 6ad349d7bc6044c2fa11d439fbcfd124, type: 2}
+  - {fileID: 11400000, guid: 8ac69fd4fa211413597c8b830948a8fd, type: 2}
+  - {fileID: 11400000, guid: 24f14a596e1cf43929b2c830196c6288, type: 2}
+  - {fileID: 11400000, guid: 8f12660b72718447ba3cdb3de0162a74, type: 2}

@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 0}
   m_Name: SheetsImportSettings
   m_EditorClassIdentifier: DiceBattler.Runtime:DiceBattler.Configs:SheetsImportSettings
+  googleSheetUrl: https://docs.google.com/spreadsheets/d/1ocPHKALVIMOhgBFsvG_mnZk3aFEVDNsVOsuQ9Y98wEQ/edit?usp=sharing
   csvFolderPath: Assets/Data/ImportedCsv
   outputFolderPath: Assets/Configs/Imported
   spreadsheetId: 1ocPHKALVIMOhgBFsvG_mnZk3aFEVDNsVOsuQ9Y98wEQ

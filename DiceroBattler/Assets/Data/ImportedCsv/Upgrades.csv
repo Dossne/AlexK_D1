@@ -1,0 +1,7 @@
+"id","type","title","description","value","eligibleFromLevel","enabled","targetDiceCount","uiIconKey","notes"
+"unlock_die_2","UnlockDie","Add Die","Unlock one more die","1","1","TRUE","2","upgrade_die","one-time until reached"
+"unlock_die_3","UnlockDie","Add Die","Unlock one more die","1","1","TRUE","3","upgrade_die","one-time until reached"
+"unlock_die_4","UnlockDie","Add Die","Unlock one more die","1","1","TRUE","4","upgrade_die","one-time until reached"
+"unlock_die_5","UnlockDie","Add Die","Unlock one more die","1","1","TRUE","5","upgrade_die","one-time until reached"
+"heal_25_percent","HealPercent","Restore Health","Restore 25% of max HP","25","1","TRUE","","upgrade_heal","repeatable"
+"flat_bonus_3","FlatDamageBonus","Increase Damage","Add +3 final damage","3","1","TRUE","","upgrade_damage","repeatable"

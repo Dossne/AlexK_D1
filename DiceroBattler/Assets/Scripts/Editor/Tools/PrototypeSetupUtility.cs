@@ -14,6 +14,7 @@ namespace DiceBattler.EditorTools
     {
         private const string DefaultsFolder = "Assets/Configs/Defaults";
         private const string RegistriesFolder = "Assets/Configs/Registries";
+        private const string ResourcesFolder = "Assets/Resources/DiceBattler";
 
         [MenuItem("Tools/Dice Battler/Setup/Create Default Assets")]
         public static void CreateDefaultAssets()
@@ -21,6 +22,8 @@ namespace DiceBattler.EditorTools
             EnsureFolder("Assets/Configs");
             EnsureFolder(DefaultsFolder);
             EnsureFolder(RegistriesFolder);
+            EnsureFolder("Assets/Resources");
+            EnsureFolder(ResourcesFolder);
 
             HeroConfig heroConfig = CreateOrLoadAsset<HeroConfig>(DefaultsFolder, "HeroConfig.asset");
             heroConfig.heroId = "hero_main";
@@ -168,6 +171,7 @@ namespace DiceBattler.EditorTools
             EditorUtility.SetDirty(vfxRegistry);
 
             SheetsImportSettings importSettings = CreateOrLoadAsset<SheetsImportSettings>(DefaultsFolder, "SheetsImportSettings.asset");
+            importSettings.googleSheetUrl = "https://docs.google.com/spreadsheets/d/1ocPHKALVIMOhgBFsvG_mnZk3aFEVDNsVOsuQ9Y98wEQ/edit?usp=sharing";
             importSettings.csvFolderPath = "Assets/Data/ImportedCsv";
             importSettings.outputFolderPath = "Assets/Configs/Imported";
             if (importSettings.sheetTabs == null || importSettings.sheetTabs.Count == 0)
@@ -188,7 +192,7 @@ namespace DiceBattler.EditorTools
             ImportStatusReport statusReport = CreateOrLoadAsset<ImportStatusReport>(DefaultsFolder, "ImportStatusReport.asset");
             EditorUtility.SetDirty(statusReport);
 
-            PrototypeContentSet contentSet = CreateOrLoadAsset<PrototypeContentSet>(DefaultsFolder, "PrototypeContentSet.asset");
+            PrototypeContentSet contentSet = CreateOrLoadAsset<PrototypeContentSet>(ResourcesFolder, "PrototypeContentSet.asset");
             contentSet.heroConfig = heroConfig;
             contentSet.mobDatabase = mobDatabase;
             contentSet.waveDatabase = waveDatabase;
@@ -213,8 +217,11 @@ namespace DiceBattler.EditorTools
         {
             EnsureFolder("Assets/Configs");
             EnsureFolder(DefaultsFolder);
+            EnsureFolder("Assets/Resources");
+            EnsureFolder(ResourcesFolder);
 
             SheetsImportSettings importSettings = CreateOrLoadAsset<SheetsImportSettings>(DefaultsFolder, "SheetsImportSettings.asset");
+            importSettings.googleSheetUrl = "https://docs.google.com/spreadsheets/d/1ocPHKALVIMOhgBFsvG_mnZk3aFEVDNsVOsuQ9Y98wEQ/edit?usp=sharing";
             importSettings.csvFolderPath = "Assets/Data/ImportedCsv";
             importSettings.outputFolderPath = "Assets/Configs/Imported";
             if (importSettings.sheetTabs == null || importSettings.sheetTabs.Count == 0)

@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 0}
+  m_Name: UpgradeDatabase
+  m_EditorClassIdentifier: DiceBattler.Runtime:DiceBattler.Configs:UpgradeDatabase
+  upgrades:
+  - {fileID: 11400000, guid: fa15262343a9942b5ac04c81de749777, type: 2}
+  - {fileID: 11400000, guid: 14d4a1034ae2d4605ba869f846077613, type: 2}
+  - {fileID: 11400000, guid: 371b83b9eada3430baa993bed444c656, type: 2}
+  - {fileID: 11400000, guid: d52d817e46c264824b14916557f9e581, type: 2}
+  - {fileID: 11400000, guid: c66a84471df2b4e9c967109832704ee2, type: 2}
+  - {fileID: 11400000, guid: 7a8826f511f6d4ba1908349f841b609a, type: 2}

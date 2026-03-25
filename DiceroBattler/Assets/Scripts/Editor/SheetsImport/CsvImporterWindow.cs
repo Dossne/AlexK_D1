@@ -4,8 +4,11 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Net.Http;
+using System.Text;
+using System.Text.RegularExpressions;
 using DiceBattler.Configs;
 using DiceBattler.Importing;
+using DiceBattler.Presentation;
 using UnityEditor;
 using UnityEngine;
 
@@ -13,127 +16,205 @@ namespace DiceBattler.EditorTools
 {
     public sealed class CsvImporterWindow : EditorWindow
     {
+        private const string DefaultsFolder = "Assets/Configs/Defaults";
+        private const string ImportedFolderDefault = "Assets/Configs/Imported";
+        private const string GeneratedPrefabsFolder = "Assets/Prefabs/Generated";
+        private const string ResourcesFolder = "Assets/Resources/DiceBattler";
+        private const string ContentSetResourcePath = "DiceBattler/PrototypeContentSet";
+        private static readonly string[] RequiredTabNames = { "Hero", "Mobs", "Waves", "Combinations", "Upgrades", "Progression", "RunConfig" };
         private static readonly HttpClient HttpClient = new HttpClient();
+        private static readonly Regex SpreadsheetIdRegex = new Regex(@"/spreadsheets/d/([a-zA-Z0-9-_]+)", RegexOptions.Compiled);
+
         private SheetsImportSettings settings;
         private ImportStatusReport statusReport;
 
         [MenuItem("Tools/Dice Battler/CSV Importer")]
         public static void Open()
         {
-            GetWindow<CsvImporterWindow>("Dice Battler CSV Importer");
+            GetWindow<CsvImporterWindow>("Dice Battler Import");
+        }
+
+        private void OnEnable()
+        {
+            EnsureSupportAssets();
         }
 
         private void OnGUI()
         {
-            settings = (SheetsImportSettings)EditorGUILayout.ObjectField("Import Settings", settings, typeof(SheetsImportSettings), false);
-            statusReport = (ImportStatusReport)EditorGUILayout.ObjectField("Status Report", statusReport, typeof(ImportStatusReport), false);
+            EnsureSupportAssets();
 
-            EditorGUILayout.HelpBox("Import exported CSV tabs into ScriptableObject config assets. Existing active data is only replaced when validation has no fatal errors.", MessageType.Info);
+            EditorGUILayout.HelpBox("Paste a Google Sheets link, then click Update. The importer will download the required tabs, create missing config assets and placeholder prefabs if needed, and update the active PrototypeContentSet.", MessageType.Info);
 
-            using (new EditorGUI.DisabledScope(settings == null))
+            EditorGUI.BeginChangeCheck();
+            settings.googleSheetUrl = EditorGUILayout.TextField("Google Sheets Link", settings.googleSheetUrl);
+            settings.csvFolderPath = EditorGUILayout.TextField("CSV Cache Folder", settings.csvFolderPath);
+            settings.outputFolderPath = EditorGUILayout.TextField("Config Output Folder", settings.outputFolderPath);
+            if (EditorGUI.EndChangeCheck())
             {
-                if (GUILayout.Button("Download From Google Sheets"))
+                EditorUtility.SetDirty(settings);
+            }
+
+            using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
+            {
+                EditorGUILayout.LabelField("Optional Tab Overrides", EditorStyles.boldLabel);
+                EnsureRequiredTabs(settings);
+                for (int index = 0; index < settings.sheetTabs.Count; index++)
                 {
-                    DownloadAndImportFromGoogleSheets();
+                    GoogleSheetTabReference tab = settings.sheetTabs[index];
+                    EditorGUILayout.BeginHorizontal();
+                    EditorGUILayout.LabelField(tab.fileName, GUILayout.Width(120f));
+                    tab.gid = EditorGUILayout.TextField("gid", tab.gid);
+                    EditorGUILayout.EndHorizontal();
+                }
+            }
+
+            EditorGUILayout.Space(8f);
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                if (GUILayout.Button("Update From Google Sheet", GUILayout.Height(34f)))
+                {
+                    UpdateFromGoogleSheet();
                 }
 
-                if (GUILayout.Button("Import CSV Folder"))
+                if (GUILayout.Button("Import Cached CSV Folder", GUILayout.Height(34f)))
                 {
                     ImportFromFolder(settings.csvFolderPath, settings.csvFolderPath);
                 }
             }
+
+            EditorGUILayout.Space(6f);
+            EditorGUILayout.ObjectField("Import Settings Asset", settings, typeof(SheetsImportSettings), false);
+            EditorGUILayout.ObjectField("Import Status Report", statusReport, typeof(ImportStatusReport), false);
         }
 
-        private void DownloadAndImportFromGoogleSheets()
+        private void UpdateFromGoogleSheet()
         {
-            if (string.IsNullOrWhiteSpace(settings.spreadsheetId))
+            EnsureSupportAssets();
+
+            string spreadsheetId = ParseSpreadsheetId(settings.googleSheetUrl);
+            if (string.IsNullOrWhiteSpace(spreadsheetId))
             {
-                Debug.LogError("SheetsImportSettings is missing spreadsheetId.");
+                EditorUtility.DisplayDialog("Dice Battler Import", "Paste a valid Google Sheets link or spreadsheet ID first.", "OK");
                 return;
             }
 
-            if (settings.sheetTabs == null || settings.sheetTabs.Count == 0)
-            {
-                Debug.LogError("SheetsImportSettings needs the required tab gid mappings.");
-                return;
-            }
+            settings.spreadsheetId = spreadsheetId;
+            EnsureRequiredTabs(settings);
+            EditorUtility.SetDirty(settings);
 
             string absoluteFolder = Path.GetFullPath(settings.csvFolderPath);
             Directory.CreateDirectory(absoluteFolder);
 
             try
             {
-                EditorUtility.DisplayProgressBar("Dice Battler Import", "Downloading Google Sheets CSV tabs...", 0f);
-                for (int index = 0; index < settings.sheetTabs.Count; index++)
+                for (int index = 0; index < RequiredTabNames.Length; index++)
                 {
-                    GoogleSheetTabReference tab = settings.sheetTabs[index];
-                    if (tab == null || string.IsNullOrWhiteSpace(tab.fileName) || string.IsNullOrWhiteSpace(tab.gid))
-                    {
-                        Debug.LogError("Each configured sheet tab needs both fileName and gid.");
-                        return;
-                    }
-
-                    string csv = DownloadCsv(settings.spreadsheetId, tab.gid);
-                    string outputPath = Path.Combine(absoluteFolder, $"{tab.fileName}.csv");
-                    File.WriteAllText(outputPath, csv);
-                    EditorUtility.DisplayProgressBar("Dice Battler Import", $"Downloaded {tab.fileName}.csv", (index + 1f) / settings.sheetTabs.Count);
+                    string tabName = RequiredTabNames[index];
+                    EditorUtility.DisplayProgressBar("Dice Battler Import", $"Downloading {tabName}...", (index + 1f) / RequiredTabNames.Length);
+                    string csv = DownloadCsvForTab(spreadsheetId, tabName, FindTabGid(settings, tabName));
+                    File.WriteAllText(Path.Combine(absoluteFolder, $"{tabName}.csv"), csv);
                 }
             }
             catch (Exception exception)
             {
+                EditorUtility.ClearProgressBar();
                 Debug.LogError($"Google Sheets download failed: {exception.Message}");
                 return;
             }
-            finally
-            {
-                EditorUtility.ClearProgressBar();
-                AssetDatabase.Refresh();
-            }
 
-            ImportFromFolder(settings.csvFolderPath, BuildSheetSourceLabel());
+            EditorUtility.ClearProgressBar();
+            AssetDatabase.Refresh();
+            ImportFromFolder(settings.csvFolderPath, $"google-sheet:{spreadsheetId}");
         }
 
         private void ImportFromFolder(string folderPath, string sourceLabel)
         {
+            EnsureSupportAssets();
+
             ImportedGameData importedData = LoadCsvFolder(folderPath);
             CsvImportValidator validator = new CsvImportValidator();
             List<Runtime.ValidationIssue> issues = validator.Validate(importedData);
             bool hasFatal = issues.Exists(issue => issue.Severity == Runtime.ValidationSeverity.Fatal);
 
-            if (statusReport != null)
+            statusReport.sourceIdentifier = sourceLabel;
+            statusReport.importedAtUtc = DateTime.UtcNow.ToString("O");
+            statusReport.importSucceeded = !hasFatal;
+            statusReport.entries.Clear();
+            for (int index = 0; index < issues.Count; index++)
             {
-                statusReport.sourceIdentifier = sourceLabel;
-                statusReport.importedAtUtc = DateTime.UtcNow.ToString("O");
-                statusReport.importSucceeded = !hasFatal;
-                statusReport.entries.Clear();
-                for (int index = 0; index < issues.Count; index++)
+                statusReport.entries.Add(new ImportStatusEntry
                 {
-                    statusReport.entries.Add(new ImportStatusEntry
-                    {
-                        severity = issues[index].Severity.ToString(),
-                        message = issues[index].Message,
-                    });
-                }
-
-                EditorUtility.SetDirty(statusReport);
+                    severity = issues[index].Severity.ToString(),
+                    message = issues[index].Message,
+                });
             }
+
+            EditorUtility.SetDirty(statusReport);
 
             if (hasFatal)
             {
+                for (int index = 0; index < issues.Count; index++)
+                {
+                    Debug.LogError($"{issues[index].Severity}: {issues[index].Message}");
+                }
+
                 AssetDatabase.SaveAssets();
-                Debug.LogError("CSV import failed. Active config assets were left unchanged.");
+                Debug.LogError("CSV import failed. Existing imported config assets were left unchanged.");
                 return;
             }
 
-            WriteAssets(importedData, settings.outputFolderPath);
+            ImportedAssetSet importedAssetSet = WriteAssets(importedData, settings.outputFolderPath);
+            UpdateContentSetAndGeneratedPrefabs(importedAssetSet);
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
-            Debug.Log("CSV import completed successfully.");
+            Debug.Log("Dice Battler config import completed successfully.");
         }
 
-        private string BuildSheetSourceLabel()
+        private void EnsureSupportAssets()
         {
-            return $"google-sheet:{settings.spreadsheetId}";
+            EnsureFolder("Assets/Configs");
+            EnsureFolder(DefaultsFolder);
+            EnsureFolder(ResourcesFolder);
+
+            if (settings == null)
+            {
+                settings = CreateOrLoadAsset<SheetsImportSettings>(DefaultsFolder, "SheetsImportSettings.asset");
+                if (string.IsNullOrWhiteSpace(settings.csvFolderPath))
+                {
+                    settings.csvFolderPath = "Assets/Data/ImportedCsv";
+                }
+
+                if (string.IsNullOrWhiteSpace(settings.outputFolderPath))
+                {
+                    settings.outputFolderPath = ImportedFolderDefault;
+                }
+
+                EnsureRequiredTabs(settings);
+                EditorUtility.SetDirty(settings);
+            }
+
+            if (statusReport == null)
+            {
+                statusReport = CreateOrLoadAsset<ImportStatusReport>(DefaultsFolder, "ImportStatusReport.asset");
+                EditorUtility.SetDirty(statusReport);
+            }
+        }
+
+        private static void EnsureRequiredTabs(SheetsImportSettings importSettings)
+        {
+            if (importSettings.sheetTabs == null)
+            {
+                importSettings.sheetTabs = new List<GoogleSheetTabReference>();
+            }
+
+            for (int index = 0; index < RequiredTabNames.Length; index++)
+            {
+                string tabName = RequiredTabNames[index];
+                if (importSettings.sheetTabs.Find(tab => tab != null && tab.fileName == tabName) == null)
+                {
+                    importSettings.sheetTabs.Add(new GoogleSheetTabReference(tabName, string.Empty));
+                }
+            }
         }
 
         private static ImportedGameData LoadCsvFolder(string folderPath)
@@ -200,13 +281,13 @@ namespace DiceBattler.EditorTools
             for (int index = 0; index < rows.Count; index++)
             {
                 Dictionary<string, string> row = rows[index];
-                string mobListValue = GetString(row, "mobList");
                 WaveRow wave = new WaveRow
                 {
                     waveNumber = GetInt(row, "waveNumber"),
                     expReward = GetInt(row, "expReward"),
                 };
 
+                string mobListValue = GetString(row, "mobList");
                 if (!string.IsNullOrWhiteSpace(mobListValue))
                 {
                     string[] mobIds = mobListValue.Split(',');
@@ -229,11 +310,7 @@ namespace DiceBattler.EditorTools
             for (int index = 0; index < rows.Count; index++)
             {
                 Dictionary<string, string> row = rows[index];
-                if (!Enum.TryParse(GetString(row, "combination"), true, out CombinationFamily family))
-                {
-                    family = CombinationFamily.None;
-                }
-
+                Enum.TryParse(GetString(row, "combination"), true, out CombinationFamily family);
                 result.Add(new CombinationRow
                 {
                     combination = family,
@@ -255,8 +332,7 @@ namespace DiceBattler.EditorTools
             for (int index = 0; index < rows.Count; index++)
             {
                 Dictionary<string, string> row = rows[index];
-                UpgradeType type;
-                Enum.TryParse(GetString(row, "type"), true, out type);
+                Enum.TryParse(GetString(row, "type"), true, out UpgradeType type);
                 result.Add(new UpgradeRow
                 {
                     id = GetString(row, "id"),
@@ -293,48 +369,78 @@ namespace DiceBattler.EditorTools
 
         private static RunConfigRow LoadRunConfig(string path)
         {
-            List<Dictionary<string, string>> rows = ReadCsv(path);
             RunConfigRow row = new RunConfigRow();
-            for (int index = 0; index < rows.Count; index++)
+            if (!File.Exists(path))
             {
-                string key = GetString(rows[index], "key");
-                string value = GetString(rows[index], "value");
-                switch (key)
+                return row;
+            }
+
+            string[] lines = File.ReadAllLines(path);
+            if (lines.Length == 0)
+            {
+                return row;
+            }
+
+            string[] firstLine = SplitCsvLine(lines[0]);
+            bool hasHeader = firstLine.Length >= 2
+                             && string.Equals(firstLine[0].Trim(), "key", StringComparison.OrdinalIgnoreCase)
+                             && string.Equals(firstLine[1].Trim(), "value", StringComparison.OrdinalIgnoreCase);
+
+            int startIndex = hasHeader ? 1 : 0;
+            for (int index = startIndex; index < lines.Length; index++)
+            {
+                if (string.IsNullOrWhiteSpace(lines[index]))
                 {
-                    case "runId":
-                        row.runId = value;
-                        break;
-                    case "totalWaves":
-                        row.totalWaves = ParseInt(value, row.totalWaves);
-                        break;
-                    case "diceSlotsTotal":
-                        row.diceSlotsTotal = ParseInt(value, row.diceSlotsTotal);
-                        break;
-                    case "rerollsPerTurnDefault":
-                        row.rerollsPerTurnDefault = ParseInt(value, row.rerollsPerTurnDefault);
-                        break;
-                    case "diceHighlightDuration":
-                        row.diceHighlightDuration = ParseFloat(value, row.diceHighlightDuration);
-                        break;
-                    case "postWaveRunTransitionDuration":
-                        row.postWaveRunTransitionDuration = ParseFloat(value, row.postWaveRunTransitionDuration);
-                        break;
-                    case "damagePanelDisplayDuration":
-                        row.damagePanelDisplayDuration = ParseFloat(value, row.damagePanelDisplayDuration);
-                        break;
-                    case "showBonusWhenZero":
-                        row.showBonusWhenZero = ParseBool(value, row.showBonusWhenZero);
-                        break;
-                    case "lockedDiceVisible":
-                        row.lockedDiceVisible = ParseBool(value, row.lockedDiceVisible);
-                        break;
+                    continue;
                 }
+
+                string[] parts = SplitCsvLine(lines[index]);
+                if (parts.Length < 2)
+                {
+                    continue;
+                }
+
+                ApplyRunConfigValue(row, parts[0].Trim(), parts[1].Trim());
             }
 
             return row;
         }
 
-        private static void WriteAssets(ImportedGameData data, string outputFolderPath)
+        private static void ApplyRunConfigValue(RunConfigRow row, string key, string value)
+        {
+            switch (key)
+            {
+                case "runId":
+                    row.runId = value;
+                    break;
+                case "totalWaves":
+                    row.totalWaves = ParseInt(value, row.totalWaves);
+                    break;
+                case "diceSlotsTotal":
+                    row.diceSlotsTotal = ParseInt(value, row.diceSlotsTotal);
+                    break;
+                case "rerollsPerTurnDefault":
+                    row.rerollsPerTurnDefault = ParseInt(value, row.rerollsPerTurnDefault);
+                    break;
+                case "diceHighlightDuration":
+                    row.diceHighlightDuration = ParseFloat(value, row.diceHighlightDuration);
+                    break;
+                case "postWaveRunTransitionDuration":
+                    row.postWaveRunTransitionDuration = ParseFloat(value, row.postWaveRunTransitionDuration);
+                    break;
+                case "damagePanelDisplayDuration":
+                    row.damagePanelDisplayDuration = ParseFloat(value, row.damagePanelDisplayDuration);
+                    break;
+                case "showBonusWhenZero":
+                    row.showBonusWhenZero = ParseBool(value, row.showBonusWhenZero);
+                    break;
+                case "lockedDiceVisible":
+                    row.lockedDiceVisible = ParseBool(value, row.lockedDiceVisible);
+                    break;
+            }
+        }
+
+        private static ImportedAssetSet WriteAssets(ImportedGameData data, string outputFolderPath)
         {
             EnsureFolder(outputFolderPath);
 
@@ -437,6 +543,107 @@ namespace DiceBattler.EditorTools
                 });
             }
             EditorUtility.SetDirty(progressionDatabase);
+
+            return new ImportedAssetSet
+            {
+                HeroConfig = hero,
+                MobDatabase = mobDatabase,
+                WaveDatabase = waveDatabase,
+                CombinationDatabase = combinationDatabase,
+                UpgradeDatabase = upgradeDatabase,
+                ProgressionDatabase = progressionDatabase,
+                RunConfig = runConfig,
+            };
+        }
+
+        private static void UpdateContentSetAndGeneratedPrefabs(ImportedAssetSet imported)
+        {
+            EnsureFolder(ResourcesFolder);
+            EnsureFolder("Assets/Configs");
+            EnsureFolder("Assets/Configs/Registries");
+            EnsureFolder(GeneratedPrefabsFolder);
+            EnsureFolder($"{GeneratedPrefabsFolder}/Hero");
+            EnsureFolder($"{GeneratedPrefabsFolder}/Enemies");
+
+            HeroPrefabRegistry heroRegistry = CreateOrLoadAsset<HeroPrefabRegistry>("Assets/Configs/Registries", "HeroPrefabRegistry.asset");
+            MobPrefabRegistry mobRegistry = CreateOrLoadAsset<MobPrefabRegistry>("Assets/Configs/Registries", "MobPrefabRegistry.asset");
+            UISkinRegistry uiSkinRegistry = CreateOrLoadAsset<UISkinRegistry>("Assets/Configs/Registries", "UISkinRegistry.asset");
+            VfxRegistry vfxRegistry = CreateOrLoadAsset<VfxRegistry>("Assets/Configs/Registries", "VfxRegistry.asset");
+
+            HeroPresenter heroPrefab = CreateOrLoadHeroPlaceholderPrefab(imported.HeroConfig);
+            heroRegistry.entries = new List<HeroPrefabEntry>
+            {
+                new HeroPrefabEntry
+                {
+                    heroId = imported.HeroConfig.heroId,
+                    presenterPrefab = heroPrefab,
+                },
+            };
+            EditorUtility.SetDirty(heroRegistry);
+
+            mobRegistry.entries = new List<MobPrefabEntry>();
+            for (int index = 0; index < imported.MobDatabase.mobs.Count; index++)
+            {
+                MobConfig mob = imported.MobDatabase.mobs[index];
+                mobRegistry.entries.Add(new MobPrefabEntry
+                {
+                    prefabKey = mob.prefabKey,
+                    presenterPrefab = CreateOrLoadEnemyPlaceholderPrefab(mob),
+                });
+            }
+            EditorUtility.SetDirty(mobRegistry);
+            EditorUtility.SetDirty(uiSkinRegistry);
+            EditorUtility.SetDirty(vfxRegistry);
+
+            PrototypeContentSet contentSet = AssetDatabase.LoadAssetAtPath<PrototypeContentSet>($"{ResourcesFolder}/PrototypeContentSet.asset");
+            if (contentSet == null)
+            {
+                contentSet = ScriptableObject.CreateInstance<PrototypeContentSet>();
+                AssetDatabase.CreateAsset(contentSet, $"{ResourcesFolder}/PrototypeContentSet.asset");
+            }
+
+            contentSet.heroConfig = imported.HeroConfig;
+            contentSet.mobDatabase = imported.MobDatabase;
+            contentSet.waveDatabase = imported.WaveDatabase;
+            contentSet.combinationDatabase = imported.CombinationDatabase;
+            contentSet.upgradeDatabase = imported.UpgradeDatabase;
+            contentSet.progressionDatabase = imported.ProgressionDatabase;
+            contentSet.runConfig = imported.RunConfig;
+            contentSet.heroPrefabRegistry = heroRegistry;
+            contentSet.mobPrefabRegistry = mobRegistry;
+            contentSet.uiSkinRegistry = uiSkinRegistry;
+            contentSet.vfxRegistry = vfxRegistry;
+            EditorUtility.SetDirty(contentSet);
+        }
+
+        private static HeroPresenter CreateOrLoadHeroPlaceholderPrefab(HeroConfig heroConfig)
+        {
+            string prefabPath = $"{GeneratedPrefabsFolder}/Hero/{SanitizeName(heroConfig.heroId)}.prefab";
+            GameObject prefabAsset = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
+            if (prefabAsset == null)
+            {
+                GameObject root = new GameObject($"{heroConfig.displayName} Placeholder");
+                root.AddComponent<HeroPresenter>();
+                prefabAsset = PrefabUtility.SaveAsPrefabAsset(root, prefabPath);
+                UnityEngine.Object.DestroyImmediate(root);
+            }
+
+            return prefabAsset.GetComponent<HeroPresenter>();
+        }
+
+        private static EnemyPresenter CreateOrLoadEnemyPlaceholderPrefab(MobConfig mobConfig)
+        {
+            string prefabPath = $"{GeneratedPrefabsFolder}/Enemies/{SanitizeName(mobConfig.prefabKey)}.prefab";
+            GameObject prefabAsset = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
+            if (prefabAsset == null)
+            {
+                GameObject root = new GameObject($"{mobConfig.displayName} Placeholder");
+                root.AddComponent<EnemyPresenter>();
+                prefabAsset = PrefabUtility.SaveAsPrefabAsset(root, prefabPath);
+                UnityEngine.Object.DestroyImmediate(root);
+            }
+
+            return prefabAsset.GetComponent<EnemyPresenter>();
         }
 
         private static T CreateOrLoadAsset<T>(string folderPath, string fileName) where T : ScriptableObject
@@ -495,9 +702,7 @@ namespace DiceBattler.EditorTools
                 Dictionary<string, string> row = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
                 for (int columnIndex = 0; columnIndex < headers.Length; columnIndex++)
                 {
-                    string header = headers[columnIndex].Trim();
-                    string value = columnIndex < columns.Length ? columns[columnIndex].Trim() : string.Empty;
-                    row[header] = value;
+                    row[headers[columnIndex].Trim()] = columnIndex < columns.Length ? columns[columnIndex].Trim() : string.Empty;
                 }
 
                 rows.Add(row);
@@ -508,7 +713,38 @@ namespace DiceBattler.EditorTools
 
         private static string[] SplitCsvLine(string line)
         {
-            return line.Split(',');
+            List<string> values = new List<string>();
+            StringBuilder current = new StringBuilder();
+            bool inQuotes = false;
+
+            for (int index = 0; index < line.Length; index++)
+            {
+                char character = line[index];
+                if (character == '"')
+                {
+                    if (inQuotes && index + 1 < line.Length && line[index + 1] == '"')
+                    {
+                        current.Append('"');
+                        index++;
+                    }
+                    else
+                    {
+                        inQuotes = !inQuotes;
+                    }
+                }
+                else if (character == ',' && !inQuotes)
+                {
+                    values.Add(current.ToString());
+                    current.Clear();
+                }
+                else
+                {
+                    current.Append(character);
+                }
+            }
+
+            values.Add(current.ToString());
+            return values.ToArray();
         }
 
         private static string GetString(Dictionary<string, string> row, string key, string defaultValue = "")
@@ -546,12 +782,78 @@ namespace DiceBattler.EditorTools
             return bool.TryParse(value, out bool parsed) ? parsed : defaultValue;
         }
 
-        private static string DownloadCsv(string spreadsheetId, string gid)
+        private static string DownloadCsvForTab(string spreadsheetId, string tabName, string gidOverride)
         {
-            string url = $"https://docs.google.com/spreadsheets/d/{spreadsheetId}/export?format=csv&gid={gid}";
-            HttpResponseMessage response = HttpClient.GetAsync(url).GetAwaiter().GetResult();
-            response.EnsureSuccessStatusCode();
-            return response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+            try
+            {
+                string byNameUrl = $"https://docs.google.com/spreadsheets/d/{spreadsheetId}/gviz/tq?tqx=out:csv&sheet={Uri.EscapeDataString(tabName)}";
+                HttpResponseMessage byNameResponse = HttpClient.GetAsync(byNameUrl).GetAwaiter().GetResult();
+                if (byNameResponse.IsSuccessStatusCode)
+                {
+                    string byNameCsv = byNameResponse.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+                    if (!string.IsNullOrWhiteSpace(byNameCsv))
+                    {
+                        return byNameCsv;
+                    }
+                }
+            }
+            catch
+            {
+                // Fall back to gid when available.
+            }
+
+            if (string.IsNullOrWhiteSpace(gidOverride))
+            {
+                throw new InvalidOperationException($"Could not download tab '{tabName}' by name, and no gid override is configured.");
+            }
+
+            string byGidUrl = $"https://docs.google.com/spreadsheets/d/{spreadsheetId}/export?format=csv&gid={gidOverride}";
+            HttpResponseMessage byGidResponse = HttpClient.GetAsync(byGidUrl).GetAwaiter().GetResult();
+            byGidResponse.EnsureSuccessStatusCode();
+            return byGidResponse.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+        }
+
+        private static string ParseSpreadsheetId(string urlOrId)
+        {
+            if (string.IsNullOrWhiteSpace(urlOrId))
+            {
+                return string.Empty;
+            }
+
+            Match match = SpreadsheetIdRegex.Match(urlOrId);
+            if (match.Success)
+            {
+                return match.Groups[1].Value;
+            }
+
+            return urlOrId.Trim();
+        }
+
+        private static string FindTabGid(SheetsImportSettings importSettings, string tabName)
+        {
+            GoogleSheetTabReference tab = importSettings.sheetTabs.Find(entry => entry != null && entry.fileName == tabName);
+            return tab != null ? tab.gid : string.Empty;
+        }
+
+        private static string SanitizeName(string value)
+        {
+            foreach (char invalidCharacter in Path.GetInvalidFileNameChars())
+            {
+                value = value.Replace(invalidCharacter, '_');
+            }
+
+            return value;
+        }
+
+        private struct ImportedAssetSet
+        {
+            public HeroConfig HeroConfig;
+            public MobDatabase MobDatabase;
+            public WaveDatabase WaveDatabase;
+            public CombinationDatabase CombinationDatabase;
+            public UpgradeDatabase UpgradeDatabase;
+            public ProgressionDatabase ProgressionDatabase;
+            public RunConfig RunConfig;
         }
     }
 }

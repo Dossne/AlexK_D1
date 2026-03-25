@@ -12,7 +12,15 @@ MonoBehaviour:
   m_Script: {fileID: 0}
   m_Name: ImportStatusReport
   m_EditorClassIdentifier: DiceBattler.Runtime:DiceBattler.Configs:ImportStatusReport
-  sourceIdentifier: 
-  importedAtUtc: 
-  importSucceeded: 0
-  entries: []
+  sourceIdentifier: google-sheet:1ocPHKALVIMOhgBFsvG_mnZk3aFEVDNsVOsuQ9Y98wEQ
+  importedAtUtc: 2026-03-25T22:06:52.8473630Z
+  importSucceeded: 1
+  entries:
+  - severity: Warning
+    message: Progression level 1 may allow a one-grant level-up edge case.
+  - severity: Warning
+    message: Progression level 2 may allow a one-grant level-up edge case.
+  - severity: Warning
+    message: Progression level 3 may allow a one-grant level-up edge case.
+  - severity: Warning
+    message: Progression level 4 may allow a one-grant level-up edge case.

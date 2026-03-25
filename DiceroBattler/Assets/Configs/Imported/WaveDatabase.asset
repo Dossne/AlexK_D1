@@ -1,0 +1,46 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 0}
+  m_Name: WaveDatabase
+  m_EditorClassIdentifier: DiceBattler.Runtime:DiceBattler.Configs:WaveDatabase
+  totalWaves: 30
+  waves:
+  - {fileID: 11400000, guid: 37f68fac88aaf411a99403a679bb91c0, type: 2}
+  - {fileID: 11400000, guid: 35c6f66558d644d9dbabe491042162db, type: 2}
+  - {fileID: 11400000, guid: a91ec86f9c5884e43b4234b5d090b3e5, type: 2}
+  - {fileID: 11400000, guid: d87bb5b88e5f042d9853c4cb21e179dd, type: 2}
+  - {fileID: 11400000, guid: c5fac595279c4476ebb80bf2080fec68, type: 2}
+  - {fileID: 11400000, guid: 25aaefc5e04e1445f864cb343a935308, type: 2}
+  - {fileID: 11400000, guid: cc855f9e8f1ff481eb362a15be1b6438, type: 2}
+  - {fileID: 11400000, guid: af95f6128b99c4a6cb9d52eaf1a39cae, type: 2}
+  - {fileID: 11400000, guid: 62d5edd25949a4ee588b65fc8699bde7, type: 2}
+  - {fileID: 11400000, guid: 8cd7814389abe46e491dd6d16ab3ba54, type: 2}
+  - {fileID: 11400000, guid: b4a3307ae7fc5452abe9284902aea8b9, type: 2}
+  - {fileID: 11400000, guid: 8be3ff302770c47179706e78750617d0, type: 2}
+  - {fileID: 11400000, guid: b378831be8b7b4558b572550c5d48357, type: 2}
+  - {fileID: 11400000, guid: 21c7e5622a2254525bca9c0f4f4abe14, type: 2}
+  - {fileID: 11400000, guid: 491c77a59911a46b3b9869ae658fa471, type: 2}
+  - {fileID: 11400000, guid: 0b299afcdcd28400c83ea73657419a75, type: 2}
+  - {fileID: 11400000, guid: 64ed330b2871043a1a89bf32f2cfb81e, type: 2}
+  - {fileID: 11400000, guid: 61e3936ae6b5d45399cef6793abfc0d8, type: 2}
+  - {fileID: 11400000, guid: 7b21721da90f9460ab028020fe4152df, type: 2}
+  - {fileID: 11400000, guid: e4f5a5d2447dd44a595fbec2c456d3ac, type: 2}
+  - {fileID: 11400000, guid: f6660b98f809b4936a6a88da6b65034f, type: 2}
+  - {fileID: 11400000, guid: 6a902ba11c1cd48bf804c9b18d27d8e8, type: 2}
+  - {fileID: 11400000, guid: 55ae983d688cf40e881c160719cb6ba6, type: 2}
+  - {fileID: 11400000, guid: 25cc607362c9f4e639eaf2ac4f594b18, type: 2}
+  - {fileID: 11400000, guid: 03e21b135e83147b3bc5c361c70559e7, type: 2}
+  - {fileID: 11400000, guid: dd212988332fd4223af458f2a61ac6e1, type: 2}
+  - {fileID: 11400000, guid: e15ecb322a8084a0faec628bc98b99a7, type: 2}
+  - {fileID: 11400000, guid: 14bc3821573b2481294bfa2a815e91dd, type: 2}
+  - {fileID: 11400000, guid: 973aee6f8b4904532a2f8d2b3f805ded, type: 2}
+  - {fileID: 11400000, guid: cd19c686222004d9dbca35d3ff536349, type: 2}

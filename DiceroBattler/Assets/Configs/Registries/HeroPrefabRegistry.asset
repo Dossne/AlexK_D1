@@ -12,4 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 0}
   m_Name: HeroPrefabRegistry
   m_EditorClassIdentifier: DiceBattler.Runtime:DiceBattler.Presentation:HeroPrefabRegistry
-  entries: []
+  entries:
+  - heroId: hero_main
+    presenterPrefab: {fileID: 0}
