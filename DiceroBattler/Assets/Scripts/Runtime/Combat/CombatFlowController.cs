@@ -82,6 +82,7 @@ namespace DiceBattler.Runtime
                 StopCoroutine(flowRoutine);
             }
 
+            overlayController.HideAll();
             runSession = new RunSession(contentSet.heroConfig, contentSet.runConfig);
             heroPresenter.SetHero(runSession.Hero);
             hudPresenter.HideDamageDealt();

@@ -292,6 +292,34 @@ namespace DiceBattler.Tests
         }
 
         [Test]
+        public void StartRunHidesActiveOverlaysBeforeRestarting()
+        {
+            GameObject root = new GameObject("StartRunOverlayTest");
+            try
+            {
+                CombatFlowController flowController = root.AddComponent<CombatFlowController>();
+                OverlayController overlayController = CreateOverlayController(root, out GameObject victoryRoot);
+                CombatHudPresenter hudPresenter = CreateHudPresenter(root);
+                HeroPresenter heroPresenter = root.AddComponent<HeroPresenter>();
+
+                victoryRoot.SetActive(true);
+
+                SetPrivateField(flowController, "contentSet", CreateStartRunContentSet());
+                SetPrivateField(flowController, "overlayController", overlayController);
+                SetPrivateField(flowController, "hudPresenter", hudPresenter);
+                SetPrivateField(flowController, "heroPresenter", heroPresenter);
+
+                flowController.StartRun();
+
+                Assert.That(victoryRoot.activeSelf, Is.False);
+            }
+            finally
+            {
+                Object.DestroyImmediate(root);
+            }
+        }
+
+        [Test]
         public void DiePresenterClickUsesDisplayedModelIndex()
         {
             GameObject root = new GameObject("DiePresenterTest");
@@ -514,6 +542,16 @@ namespace DiceBattler.Tests
             return contentSet;
         }
 
+        private static PrototypeContentSet CreateStartRunContentSet()
+        {
+            PrototypeContentSet contentSet = CreateContentSet();
+            contentSet.heroConfig = ScriptableObject.CreateInstance<HeroConfig>();
+            contentSet.heroConfig.maxHp = 20;
+            contentSet.heroConfig.startingUnlockedDice = 1;
+            contentSet.progressionDatabase = ScriptableObject.CreateInstance<ProgressionDatabase>();
+            return contentSet;
+        }
+
         private static RunSession CreateRunSession()
         {
             HeroConfig hero = ScriptableObject.CreateInstance<HeroConfig>();
@@ -554,6 +592,23 @@ namespace DiceBattler.Tests
             damageTakenText = CreateText(hudObject, "DamageTakenText");
             presenter.Configure(null, null, null, rerollText, null, damageDealtText, damageTakenText, null);
             return presenter;
+        }
+
+        private static OverlayController CreateOverlayController(GameObject root, out GameObject victoryRoot)
+        {
+            GameObject overlayObject = new GameObject("OverlayController");
+            overlayObject.transform.SetParent(root.transform);
+            OverlayController controller = overlayObject.AddComponent<OverlayController>();
+
+            GameObject levelUpRoot = new GameObject("LevelUpRoot");
+            levelUpRoot.transform.SetParent(overlayObject.transform);
+            GameObject defeatRoot = new GameObject("DefeatRoot");
+            defeatRoot.transform.SetParent(overlayObject.transform);
+            victoryRoot = new GameObject("VictoryRoot");
+            victoryRoot.transform.SetParent(overlayObject.transform);
+
+            controller.Configure(levelUpRoot, new UpgradeChoiceView[0], defeatRoot, null, victoryRoot, null);
+            return controller;
         }
 
         private static Text CreateText(GameObject parent, string name)
