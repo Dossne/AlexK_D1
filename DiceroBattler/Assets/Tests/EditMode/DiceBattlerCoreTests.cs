@@ -1,9 +1,12 @@
 using System.Collections.Generic;
+using System.Reflection;
 using DiceBattler.Configs;
 using DiceBattler.Importing;
+using DiceBattler.Presentation;
 using DiceBattler.Runtime;
 using NUnit.Framework;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace DiceBattler.Tests
 {
@@ -106,6 +109,56 @@ namespace DiceBattler.Tests
             UpgradeOfferSet offers = service.GenerateOffers(session, database);
 
             Assert.That(offers.Options.TrueForAll(option => option.targetDiceCount == 5));
+        }
+
+        [Test]
+        public void RerollBudgetStopsAtZeroAfterThreeConsumes()
+        {
+            RerollBudgetController controller = new RerollBudgetController();
+            controller.BeginTurn(3);
+
+            Assert.That(controller.TryConsume(), Is.True);
+            Assert.That(controller.TryConsume(), Is.True);
+            Assert.That(controller.TryConsume(), Is.True);
+            Assert.That(controller.TryConsume(), Is.False);
+            Assert.That(controller.Remaining, Is.EqualTo(0));
+        }
+
+        [Test]
+        public void HandleDiePressedConsumesOneRerollAndLocksFurtherClicksImmediately()
+        {
+            GameObject root = new GameObject("CombatFlowControllerTest");
+            try
+            {
+                CombatFlowController flowController = root.AddComponent<CombatFlowController>();
+                SetPrivateField(flowController, "currentPhase", CombatFlowPhase.PlayerDecision);
+                SetPrivateField(flowController, "runSession", CreateRunSession());
+                SetPrivateField(flowController, "diceController", CreateDiceControllerForReroll());
+
+                RerollBudgetController budget = new RerollBudgetController();
+                budget.BeginTurn(3);
+                SetPrivateField(flowController, "rerollBudget", budget);
+                SetPrivateField(flowController, "contentSet", CreateContentSet());
+                SetPrivateField(flowController, "hudPresenter", CreateHudPresenter(root));
+                SetPrivateField(flowController, "diePresenters", CreateDiePresenters(root, 5));
+                SetPrivateField(flowController, "latestDamage", new DamageCalculationResult());
+
+                InvokePrivateMethod(flowController, "HandleDiePressed", 1);
+
+                RunSession session = GetPrivateField<RunSession>(flowController, "runSession");
+                Assert.That(budget.Remaining, Is.EqualTo(2));
+                Assert.That(session.RerollsRemaining, Is.EqualTo(2));
+                Assert.That(GetPrivateField<CombatFlowPhase>(flowController, "currentPhase"), Is.EqualTo(CombatFlowPhase.PlayerRoll));
+
+                InvokePrivateMethod(flowController, "HandleDiePressed", 1);
+
+                Assert.That(budget.Remaining, Is.EqualTo(2));
+                Assert.That(session.RerollsRemaining, Is.EqualTo(2));
+            }
+            finally
+            {
+                Object.DestroyImmediate(root);
+            }
         }
 
         [Test]
@@ -225,6 +278,83 @@ namespace DiceBattler.Tests
             mob.expReward = 1;
             mob.prefabKey = id;
             return mob;
+        }
+
+        private static PrototypeContentSet CreateContentSet()
+        {
+            PrototypeContentSet contentSet = ScriptableObject.CreateInstance<PrototypeContentSet>();
+            contentSet.runConfig = ScriptableObject.CreateInstance<RunConfig>();
+            contentSet.runConfig.diceHighlightDuration = 0f;
+            contentSet.runConfig.showBonusWhenZero = true;
+            return contentSet;
+        }
+
+        private static RunSession CreateRunSession()
+        {
+            HeroConfig hero = ScriptableObject.CreateInstance<HeroConfig>();
+            hero.maxHp = 20;
+            hero.startingUnlockedDice = 5;
+
+            RunConfig run = ScriptableObject.CreateInstance<RunConfig>();
+            run.diceSlotsTotal = 5;
+
+            return new RunSession(hero, run);
+        }
+
+        private static DiceController CreateDiceControllerForReroll()
+        {
+            DiceController controller = new DiceController(5, new StubRandomService(1, 2, 3, 4, 5, 6, 6));
+            controller.BeginTurn(5, 3);
+            controller.RollAllUnlocked();
+            controller.SetReadyForUnlocked();
+            return controller;
+        }
+
+        private static CombatHudPresenter CreateHudPresenter(GameObject root)
+        {
+            GameObject hudObject = new GameObject("Hud");
+            hudObject.transform.SetParent(root.transform);
+            CombatHudPresenter presenter = hudObject.AddComponent<CombatHudPresenter>();
+
+            GameObject rerollObject = new GameObject("RerollText");
+            rerollObject.transform.SetParent(hudObject.transform);
+            Text rerollText = rerollObject.AddComponent<Text>();
+            presenter.Configure(null, null, null, rerollText, null, null, null);
+            return presenter;
+        }
+
+        private static DiePresenter[] CreateDiePresenters(GameObject root, int count)
+        {
+            DiePresenter[] presenters = new DiePresenter[count];
+            for (int index = 0; index < count; index++)
+            {
+                GameObject dieObject = new GameObject($"Die_{index}");
+                dieObject.transform.SetParent(root.transform);
+                presenters[index] = dieObject.AddComponent<DiePresenter>();
+            }
+
+            return presenters;
+        }
+
+        private static T GetPrivateField<T>(object instance, string name)
+        {
+            FieldInfo field = instance.GetType().GetField(name, BindingFlags.Instance | BindingFlags.NonPublic);
+            Assert.That(field, Is.Not.Null, $"Missing field {name}");
+            return (T)field.GetValue(instance);
+        }
+
+        private static void SetPrivateField(object instance, string name, object value)
+        {
+            FieldInfo field = instance.GetType().GetField(name, BindingFlags.Instance | BindingFlags.NonPublic);
+            Assert.That(field, Is.Not.Null, $"Missing field {name}");
+            field.SetValue(instance, value);
+        }
+
+        private static void InvokePrivateMethod(object instance, string name, params object[] args)
+        {
+            MethodInfo method = instance.GetType().GetMethod(name, BindingFlags.Instance | BindingFlags.NonPublic);
+            Assert.That(method, Is.Not.Null, $"Missing method {name}");
+            method.Invoke(instance, args);
         }
 
         private sealed class StubRandomService : IRandomService

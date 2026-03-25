@@ -166,7 +166,7 @@ namespace DiceBattler.Runtime
                 hudPresenter.SetAttackInteractable(true);
                 UpdateDicePresentation();
 
-                while (currentPhase == CombatFlowPhase.PlayerDecision)
+                while (currentPhase == CombatFlowPhase.PlayerDecision || currentPhase == CombatFlowPhase.PlayerRoll)
                 {
                     yield return null;
                 }
@@ -202,23 +202,41 @@ namespace DiceBattler.Runtime
 
         private void HandleDiePressed(int index)
         {
-            if (currentPhase != CombatFlowPhase.PlayerDecision || rerollBudget.Remaining <= 0)
+            if (!TryBeginReroll(index))
             {
                 return;
             }
+            StartCoroutine(ResolveReroll());
+        }
 
-            if (!rerollBudget.TryConsume() || !diceController.TryRerollPrefix(index))
+        private bool TryBeginReroll(int index)
+        {
+            if (currentPhase != CombatFlowPhase.PlayerDecision || rerollBudget.Remaining <= 0)
             {
-                return;
+                return false;
+            }
+
+            if (!rerollBudget.TryConsume())
+            {
+                return false;
+            }
+
+            if (!diceController.TryRerollPrefix(index))
+            {
+                rerollBudget.Refund();
+                runSession.RerollsRemaining = rerollBudget.Remaining;
+                return false;
             }
 
             runSession.RerollsRemaining = rerollBudget.Remaining;
-            StartCoroutine(ResolveReroll());
+            currentPhase = CombatFlowPhase.PlayerRoll;
+            UpdateHudValues();
+            UpdateDicePresentation();
+            return true;
         }
 
         private IEnumerator ResolveReroll()
         {
-            currentPhase = CombatFlowPhase.PlayerRoll;
             diceController.SetShowingResultForUnlocked();
             UpdateDicePresentation();
             yield return new WaitForSeconds(contentSet.runConfig.diceHighlightDuration);

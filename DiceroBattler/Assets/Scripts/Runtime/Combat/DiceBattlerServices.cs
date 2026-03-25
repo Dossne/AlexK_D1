@@ -166,6 +166,11 @@ namespace DiceBattler.Runtime
             Remaining--;
             return true;
         }
+
+        public void Refund()
+        {
+            Remaining = Mathf.Min(Remaining + 1, Maximum);
+        }
     }
 
     public sealed class CombinationEvaluationService
