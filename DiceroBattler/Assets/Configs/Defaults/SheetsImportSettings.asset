@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 0}
+  m_Name: SheetsImportSettings
+  m_EditorClassIdentifier: DiceBattler.Runtime:DiceBattler.Configs:SheetsImportSettings
+  csvFolderPath: Assets/Data/ImportedCsv
+  outputFolderPath: Assets/Configs/Imported
+  spreadsheetId: 1ocPHKALVIMOhgBFsvG_mnZk3aFEVDNsVOsuQ9Y98wEQ
+  sheetTabs:
+  - fileName: Hero
+    gid: 
+  - fileName: Mobs
+    gid: 
+  - fileName: Waves
+    gid: 
+  - fileName: Combinations
+    gid: 
+  - fileName: Upgrades
+    gid: 
+  - fileName: Progression
+    gid: 
+  - fileName: RunConfig
+    gid: 

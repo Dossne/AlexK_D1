@@ -19,6 +19,24 @@ namespace DiceBattler.Presentation
         [SerializeField] private Text damageDealtText;
         [SerializeField] private Button attackButton;
 
+        public void Configure(
+            Slider expBarSlider,
+            Text levelLabel,
+            Text waveLabel,
+            Text rerollLabel,
+            Text damagePreviewLabel,
+            Text damageDealtLabel,
+            Button attackCta)
+        {
+            expBar = expBarSlider;
+            levelText = levelLabel;
+            waveText = waveLabel;
+            rerollText = rerollLabel;
+            damagePreviewText = damagePreviewLabel;
+            damageDealtText = damageDealtLabel;
+            attackButton = attackCta;
+        }
+
         public void BindAttack(Action onAttackPressed)
         {
             if (attackButton == null)
@@ -101,6 +119,15 @@ namespace DiceBattler.Presentation
         [SerializeField] private float hitDuration = 0.25f;
         [SerializeField] private float deathDuration = 0.8f;
 
+        public void Configure(Animator heroAnimator, Slider heroHpBar, Transform hpAnchor, Transform damagePoint, Transform hitFxPoint)
+        {
+            animator = heroAnimator;
+            hpBar = heroHpBar;
+            hpBarAnchor = hpAnchor;
+            damageAnchor = damagePoint;
+            hitFxAnchor = hitFxPoint;
+        }
+
         public Transform HpBarAnchor => hpBarAnchor;
         public Transform DamageAnchor => damageAnchor;
         public Transform HitFxAnchor => hitFxAnchor;
@@ -177,6 +204,26 @@ namespace DiceBattler.Presentation
         [SerializeField] private float attackDuration = 0.45f;
         [SerializeField] private float hitDuration = 0.2f;
         [SerializeField] private float deathDuration = 0.65f;
+
+        public void Configure(
+            Animator enemyAnimator,
+            Slider enemyHpBar,
+            Text enemyIntentText,
+            Text enemyNameText,
+            Transform hpAnchor,
+            Transform intentPoint,
+            Transform damagePoint,
+            Transform hitFxPoint)
+        {
+            animator = enemyAnimator;
+            hpBar = enemyHpBar;
+            intentText = enemyIntentText;
+            nameText = enemyNameText;
+            hpBarAnchor = hpAnchor;
+            intentAnchor = intentPoint;
+            damageAnchor = damagePoint;
+            hitFxAnchor = hitFxPoint;
+        }
 
         public EnemyRuntimeUnit CurrentEnemy { get; private set; }
         public Transform HpBarAnchor => hpBarAnchor;
@@ -271,6 +318,15 @@ namespace DiceBattler.Presentation
         private Action<int> onPressed;
         private int dieIndex;
 
+        public void Configure(Text dieValueText, Graphic dieTapTarget, GameObject dieHighlightVisual, GameObject dieLockVisual, CanvasGroup dieCanvasGroup)
+        {
+            valueText = dieValueText;
+            tapTarget = dieTapTarget;
+            highlightVisual = dieHighlightVisual;
+            lockVisual = dieLockVisual;
+            canvasGroup = dieCanvasGroup;
+        }
+
         public void Bind(int index, Action<int> onPressedCallback)
         {
             dieIndex = index;
@@ -328,6 +384,22 @@ namespace DiceBattler.Presentation
         [SerializeField] private Button retryButton;
         [SerializeField] private GameObject victoryRoot;
         [SerializeField] private Button continueButton;
+
+        public void Configure(
+            GameObject levelUpOverlayRoot,
+            UpgradeChoiceView[] choices,
+            GameObject defeatOverlayRoot,
+            Button defeatRetryButton,
+            GameObject victoryOverlayRoot,
+            Button victoryContinueButton)
+        {
+            levelUpRoot = levelUpOverlayRoot;
+            levelUpChoices = choices;
+            defeatRoot = defeatOverlayRoot;
+            retryButton = defeatRetryButton;
+            victoryRoot = victoryOverlayRoot;
+            continueButton = victoryContinueButton;
+        }
 
         public void HideAll()
         {

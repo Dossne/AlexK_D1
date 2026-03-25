@@ -196,6 +196,30 @@ namespace DiceBattler.Configs
     {
         public string csvFolderPath = "Assets/Data/ImportedCsv";
         public string outputFolderPath = "Assets/Configs/Imported";
+        public string spreadsheetId = "1ocPHKALVIMOhgBFsvG_mnZk3aFEVDNsVOsuQ9Y98wEQ";
+        public List<GoogleSheetTabReference> sheetTabs = new List<GoogleSheetTabReference>
+        {
+            new GoogleSheetTabReference("Hero", string.Empty),
+            new GoogleSheetTabReference("Mobs", string.Empty),
+            new GoogleSheetTabReference("Waves", string.Empty),
+            new GoogleSheetTabReference("Combinations", string.Empty),
+            new GoogleSheetTabReference("Upgrades", string.Empty),
+            new GoogleSheetTabReference("Progression", string.Empty),
+            new GoogleSheetTabReference("RunConfig", string.Empty),
+        };
+    }
+
+    [Serializable]
+    public sealed class GoogleSheetTabReference
+    {
+        public GoogleSheetTabReference(string fileName, string gid)
+        {
+            this.fileName = fileName;
+            this.gid = gid;
+        }
+
+        public string fileName;
+        public string gid;
     }
 
     [Serializable]

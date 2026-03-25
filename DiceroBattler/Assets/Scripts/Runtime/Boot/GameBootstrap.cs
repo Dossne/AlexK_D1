@@ -11,10 +11,20 @@ namespace DiceBattler.Boot
 
         private void Awake()
         {
-            if (contentSet == null || combatSceneInstaller == null)
+            if (contentSet == null)
             {
-                Debug.LogError("GameBootstrap is missing required references.");
-                return;
+                contentSet = PrototypeRuntimeFactory.CreateInMemoryContentSet();
+                Debug.LogWarning("GameBootstrap is using an in-memory default content set because no PrototypeContentSet asset was assigned.");
+            }
+
+            if (combatSceneInstaller == null)
+            {
+                combatSceneInstaller = FindFirstObjectByType<CombatSceneInstaller>();
+                if (combatSceneInstaller == null)
+                {
+                    GameObject installerRoot = new GameObject("Combat Scene Installer");
+                    combatSceneInstaller = installerRoot.AddComponent<CombatSceneInstaller>();
+                }
             }
 
             combatSceneInstaller.Initialize(contentSet);

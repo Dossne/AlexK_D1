@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Net.Http;
 using DiceBattler.Configs;
 using DiceBattler.Importing;
 using UnityEditor;
@@ -12,6 +13,7 @@ namespace DiceBattler.EditorTools
 {
     public sealed class CsvImporterWindow : EditorWindow
     {
+        private static readonly HttpClient HttpClient = new HttpClient();
         private SheetsImportSettings settings;
         private ImportStatusReport statusReport;
 
@@ -30,16 +32,69 @@ namespace DiceBattler.EditorTools
 
             using (new EditorGUI.DisabledScope(settings == null))
             {
+                if (GUILayout.Button("Download From Google Sheets"))
+                {
+                    DownloadAndImportFromGoogleSheets();
+                }
+
                 if (GUILayout.Button("Import CSV Folder"))
                 {
-                    Import();
+                    ImportFromFolder(settings.csvFolderPath, settings.csvFolderPath);
                 }
             }
         }
 
-        private void Import()
+        private void DownloadAndImportFromGoogleSheets()
         {
-            string folderPath = settings.csvFolderPath;
+            if (string.IsNullOrWhiteSpace(settings.spreadsheetId))
+            {
+                Debug.LogError("SheetsImportSettings is missing spreadsheetId.");
+                return;
+            }
+
+            if (settings.sheetTabs == null || settings.sheetTabs.Count == 0)
+            {
+                Debug.LogError("SheetsImportSettings needs the required tab gid mappings.");
+                return;
+            }
+
+            string absoluteFolder = Path.GetFullPath(settings.csvFolderPath);
+            Directory.CreateDirectory(absoluteFolder);
+
+            try
+            {
+                EditorUtility.DisplayProgressBar("Dice Battler Import", "Downloading Google Sheets CSV tabs...", 0f);
+                for (int index = 0; index < settings.sheetTabs.Count; index++)
+                {
+                    GoogleSheetTabReference tab = settings.sheetTabs[index];
+                    if (tab == null || string.IsNullOrWhiteSpace(tab.fileName) || string.IsNullOrWhiteSpace(tab.gid))
+                    {
+                        Debug.LogError("Each configured sheet tab needs both fileName and gid.");
+                        return;
+                    }
+
+                    string csv = DownloadCsv(settings.spreadsheetId, tab.gid);
+                    string outputPath = Path.Combine(absoluteFolder, $"{tab.fileName}.csv");
+                    File.WriteAllText(outputPath, csv);
+                    EditorUtility.DisplayProgressBar("Dice Battler Import", $"Downloaded {tab.fileName}.csv", (index + 1f) / settings.sheetTabs.Count);
+                }
+            }
+            catch (Exception exception)
+            {
+                Debug.LogError($"Google Sheets download failed: {exception.Message}");
+                return;
+            }
+            finally
+            {
+                EditorUtility.ClearProgressBar();
+                AssetDatabase.Refresh();
+            }
+
+            ImportFromFolder(settings.csvFolderPath, BuildSheetSourceLabel());
+        }
+
+        private void ImportFromFolder(string folderPath, string sourceLabel)
+        {
             ImportedGameData importedData = LoadCsvFolder(folderPath);
             CsvImportValidator validator = new CsvImportValidator();
             List<Runtime.ValidationIssue> issues = validator.Validate(importedData);
@@ -47,7 +102,7 @@ namespace DiceBattler.EditorTools
 
             if (statusReport != null)
             {
-                statusReport.sourceIdentifier = folderPath;
+                statusReport.sourceIdentifier = sourceLabel;
                 statusReport.importedAtUtc = DateTime.UtcNow.ToString("O");
                 statusReport.importSucceeded = !hasFatal;
                 statusReport.entries.Clear();
@@ -74,6 +129,11 @@ namespace DiceBattler.EditorTools
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
             Debug.Log("CSV import completed successfully.");
+        }
+
+        private string BuildSheetSourceLabel()
+        {
+            return $"google-sheet:{settings.spreadsheetId}";
         }
 
         private static ImportedGameData LoadCsvFolder(string folderPath)
@@ -484,6 +544,14 @@ namespace DiceBattler.EditorTools
         private static bool ParseBool(string value, bool defaultValue)
         {
             return bool.TryParse(value, out bool parsed) ? parsed : defaultValue;
+        }
+
+        private static string DownloadCsv(string spreadsheetId, string gid)
+        {
+            string url = $"https://docs.google.com/spreadsheets/d/{spreadsheetId}/export?format=csv&gid={gid}";
+            HttpResponseMessage response = HttpClient.GetAsync(url).GetAwaiter().GetResult();
+            response.EnsureSuccessStatusCode();
+            return response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
         }
     }
 }
