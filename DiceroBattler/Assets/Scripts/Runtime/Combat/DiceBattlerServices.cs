@@ -479,12 +479,9 @@ namespace DiceBattler.Runtime
 
             if (upgrade.type == UpgradeType.UnlockDie)
             {
-                if (upgrade.targetDiceCount <= session.UnlockedDiceCount)
-                {
-                    return false;
-                }
-
-                return upgrade.targetDiceCount <= runConfig.diceSlotsTotal;
+                int nextUnlockedCount = session.UnlockedDiceCount + 1;
+                return upgrade.targetDiceCount == nextUnlockedCount
+                       && upgrade.targetDiceCount <= runConfig.diceSlotsTotal;
             }
 
             return upgrade.value > 0f;

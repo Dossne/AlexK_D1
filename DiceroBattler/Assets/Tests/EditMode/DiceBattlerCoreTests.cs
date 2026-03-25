@@ -121,6 +121,7 @@ namespace DiceBattler.Tests
             database.upgrades = new List<UpgradeConfig>
             {
                 CreateUnlockUpgrade("unlock_4", 4),
+                CreateUnlockUpgrade("unlock_3", 3),
                 CreateUnlockUpgrade("unlock_5", 5),
             };
 
@@ -128,6 +129,29 @@ namespace DiceBattler.Tests
             UpgradeOfferSet offers = service.GenerateOffers(session, database);
 
             Assert.That(offers.Options.TrueForAll(option => option.targetDiceCount == 5));
+        }
+
+        [Test]
+        public void UnlockDieUpgradesOnlyOfferImmediateNextSlot()
+        {
+            RunConfig run = ScriptableObject.CreateInstance<RunConfig>();
+            run.diceSlotsTotal = 5;
+
+            HeroConfig hero = ScriptableObject.CreateInstance<HeroConfig>();
+            hero.startingUnlockedDice = 1;
+            RunSession session = new RunSession(hero, run);
+            UpgradeDatabase database = ScriptableObject.CreateInstance<UpgradeDatabase>();
+            database.upgrades = new List<UpgradeConfig>
+            {
+                CreateUnlockUpgrade("unlock_2", 2),
+                CreateUnlockUpgrade("unlock_3", 3),
+                CreateUnlockUpgrade("unlock_4", 4),
+            };
+
+            UpgradeSelectionService service = new UpgradeSelectionService(run, new StubRandomService(0, 0, 0));
+            UpgradeOfferSet offers = service.GenerateOffers(session, database);
+
+            Assert.That(offers.Options.TrueForAll(option => option.targetDiceCount == 2));
         }
 
         [Test]
