@@ -11,9 +11,10 @@ namespace DiceBattler.Boot
 
         private void Awake()
         {
-            if (contentSet == null)
+            PrototypeContentSet importedContentSet = Resources.Load<PrototypeContentSet>("DiceBattler/PrototypeContentSet");
+            if (importedContentSet != null)
             {
-                contentSet = Resources.Load<PrototypeContentSet>("DiceBattler/PrototypeContentSet");
+                contentSet = importedContentSet;
             }
 
             if (contentSet == null)
@@ -30,6 +31,11 @@ namespace DiceBattler.Boot
                     GameObject installerRoot = new GameObject("Combat Scene Installer");
                     combatSceneInstaller = installerRoot.AddComponent<CombatSceneInstaller>();
                 }
+            }
+
+            if (contentSet != null && contentSet.runConfig != null)
+            {
+                Debug.Log($"GameBootstrap using content set '{contentSet.name}' with totalWaves={contentSet.runConfig.totalWaves}.");
             }
 
             combatSceneInstaller.Initialize(contentSet);

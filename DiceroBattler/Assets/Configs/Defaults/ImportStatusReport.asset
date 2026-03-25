@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: ImportStatusReport
   m_EditorClassIdentifier: DiceBattler.Runtime:DiceBattler.Configs:ImportStatusReport
   sourceIdentifier: google-sheet:1ocPHKALVIMOhgBFsvG_mnZk3aFEVDNsVOsuQ9Y98wEQ
-  importedAtUtc: 2026-03-25T23:02:47.4008860Z
+  importedAtUtc: 2026-03-25T23:25:59.3196520Z
   importSucceeded: 1
   entries:
   - severity: Warning

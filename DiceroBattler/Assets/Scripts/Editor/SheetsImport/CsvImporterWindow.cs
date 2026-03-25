@@ -6,10 +6,12 @@ using System.IO;
 using System.Net.Http;
 using System.Text;
 using System.Text.RegularExpressions;
+using DiceBattler.Boot;
 using DiceBattler.Configs;
 using DiceBattler.Importing;
 using DiceBattler.Presentation;
 using UnityEditor;
+using UnityEditor.SceneManagement;
 using UnityEngine;
 
 namespace DiceBattler.EditorTools
@@ -20,7 +22,7 @@ namespace DiceBattler.EditorTools
         private const string ImportedFolderDefault = "Assets/Configs/Imported";
         private const string GeneratedPrefabsFolder = "Assets/Prefabs/Generated";
         private const string ResourcesFolder = "Assets/Resources/DiceBattler";
-        private const string ContentSetResourcePath = "DiceBattler/PrototypeContentSet";
+        private const string ContentSetAssetPath = "Assets/Resources/DiceBattler/PrototypeContentSet.asset";
         private static readonly string[] RequiredTabNames = { "Hero", "Mobs", "Waves", "Combinations", "Upgrades", "Progression", "RunConfig" };
         private static readonly HttpClient HttpClient = new HttpClient();
         private static readonly Regex SpreadsheetIdRegex = new Regex(@"/spreadsheets/d/([a-zA-Z0-9-_]+)", RegexOptions.Compiled);
@@ -164,10 +166,12 @@ namespace DiceBattler.EditorTools
             }
 
             ImportedAssetSet importedAssetSet = WriteAssets(importedData, settings.outputFolderPath);
-            UpdateContentSetAndGeneratedPrefabs(importedAssetSet);
+            PrototypeContentSet contentSet = UpdateContentSetAndGeneratedPrefabs(importedAssetSet);
+            AssignImportedContentSetToOpenBootstraps(contentSet);
+            ForcePersistImportedAssets(importedAssetSet);
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
-            Debug.Log("Dice Battler config import completed successfully.");
+            Debug.Log($"Dice Battler config import completed successfully. Waves imported: {importedAssetSet.WaveCount}. RunConfig totalWaves: {importedAssetSet.RunConfig.totalWaves}.");
         }
 
         private void EnsureSupportAssets()
@@ -559,10 +563,11 @@ namespace DiceBattler.EditorTools
                 UpgradeDatabase = upgradeDatabase,
                 ProgressionDatabase = progressionDatabase,
                 RunConfig = runConfig,
+                WaveCount = importedWaves.Count,
             };
         }
 
-        private static void UpdateContentSetAndGeneratedPrefabs(ImportedAssetSet imported)
+        private static PrototypeContentSet UpdateContentSetAndGeneratedPrefabs(ImportedAssetSet imported)
         {
             EnsureFolder(ResourcesFolder);
             EnsureFolder("Assets/Configs");
@@ -571,12 +576,19 @@ namespace DiceBattler.EditorTools
             EnsureFolder($"{GeneratedPrefabsFolder}/Hero");
             EnsureFolder($"{GeneratedPrefabsFolder}/Enemies");
 
-            HeroPrefabRegistry heroRegistry = CreateOrLoadAsset<HeroPrefabRegistry>("Assets/Configs/Registries", "HeroPrefabRegistry.asset");
-            MobPrefabRegistry mobRegistry = CreateOrLoadAsset<MobPrefabRegistry>("Assets/Configs/Registries", "MobPrefabRegistry.asset");
-            UISkinRegistry uiSkinRegistry = CreateOrLoadAsset<UISkinRegistry>("Assets/Configs/Registries", "UISkinRegistry.asset");
-            VfxRegistry vfxRegistry = CreateOrLoadAsset<VfxRegistry>("Assets/Configs/Registries", "VfxRegistry.asset");
-
             HeroPresenter heroPrefab = CreateOrLoadHeroPlaceholderPrefab(imported.HeroConfig);
+            List<MobPrefabEntry> mobEntries = new List<MobPrefabEntry>();
+            for (int index = 0; index < imported.MobDatabase.mobs.Count; index++)
+            {
+                MobConfig mob = imported.MobDatabase.mobs[index];
+                mobEntries.Add(new MobPrefabEntry
+                {
+                    prefabKey = mob.prefabKey,
+                    presenterPrefab = CreateOrLoadEnemyPlaceholderPrefab(mob),
+                });
+            }
+
+            HeroPrefabRegistry heroRegistry = CreateOrLoadAsset<HeroPrefabRegistry>("Assets/Configs/Registries", "HeroPrefabRegistry.asset");
             heroRegistry.entries = new List<HeroPrefabEntry>
             {
                 new HeroPrefabEntry
@@ -587,25 +599,21 @@ namespace DiceBattler.EditorTools
             };
             EditorUtility.SetDirty(heroRegistry);
 
-            mobRegistry.entries = new List<MobPrefabEntry>();
-            for (int index = 0; index < imported.MobDatabase.mobs.Count; index++)
-            {
-                MobConfig mob = imported.MobDatabase.mobs[index];
-                mobRegistry.entries.Add(new MobPrefabEntry
-                {
-                    prefabKey = mob.prefabKey,
-                    presenterPrefab = CreateOrLoadEnemyPlaceholderPrefab(mob),
-                });
-            }
+            MobPrefabRegistry mobRegistry = CreateOrLoadAsset<MobPrefabRegistry>("Assets/Configs/Registries", "MobPrefabRegistry.asset");
+            mobRegistry.entries = mobEntries;
             EditorUtility.SetDirty(mobRegistry);
+
+            UISkinRegistry uiSkinRegistry = CreateOrLoadAsset<UISkinRegistry>("Assets/Configs/Registries", "UISkinRegistry.asset");
             EditorUtility.SetDirty(uiSkinRegistry);
+
+            VfxRegistry vfxRegistry = CreateOrLoadAsset<VfxRegistry>("Assets/Configs/Registries", "VfxRegistry.asset");
             EditorUtility.SetDirty(vfxRegistry);
 
-            PrototypeContentSet contentSet = AssetDatabase.LoadAssetAtPath<PrototypeContentSet>($"{ResourcesFolder}/PrototypeContentSet.asset");
+            PrototypeContentSet contentSet = AssetDatabase.LoadAssetAtPath<PrototypeContentSet>(ContentSetAssetPath);
             if (contentSet == null)
             {
                 contentSet = ScriptableObject.CreateInstance<PrototypeContentSet>();
-                AssetDatabase.CreateAsset(contentSet, $"{ResourcesFolder}/PrototypeContentSet.asset");
+                AssetDatabase.CreateAsset(contentSet, ContentSetAssetPath);
             }
 
             contentSet.heroConfig = imported.HeroConfig;
@@ -620,6 +628,49 @@ namespace DiceBattler.EditorTools
             contentSet.uiSkinRegistry = uiSkinRegistry;
             contentSet.vfxRegistry = vfxRegistry;
             EditorUtility.SetDirty(contentSet);
+            return contentSet;
+        }
+
+        private static void AssignImportedContentSetToOpenBootstraps(PrototypeContentSet contentSet)
+        {
+            if (contentSet == null)
+            {
+                return;
+            }
+
+            GameBootstrap[] bootstraps = UnityEngine.Object.FindObjectsByType<GameBootstrap>(FindObjectsSortMode.None);
+            for (int index = 0; index < bootstraps.Length; index++)
+            {
+                SerializedObject serializedBootstrap = new SerializedObject(bootstraps[index]);
+                SerializedProperty contentSetProperty = serializedBootstrap.FindProperty("contentSet");
+                if (contentSetProperty != null)
+                {
+                    contentSetProperty.objectReferenceValue = contentSet;
+                    serializedBootstrap.ApplyModifiedPropertiesWithoutUndo();
+                    EditorUtility.SetDirty(bootstraps[index]);
+                    EditorSceneManager.MarkSceneDirty(bootstraps[index].gameObject.scene);
+                }
+            }
+        }
+
+        private static void ForcePersistImportedAssets(ImportedAssetSet imported)
+        {
+            List<string> assetPaths = new List<string>
+            {
+                AssetDatabase.GetAssetPath(imported.HeroConfig),
+                AssetDatabase.GetAssetPath(imported.MobDatabase),
+                AssetDatabase.GetAssetPath(imported.WaveDatabase),
+                AssetDatabase.GetAssetPath(imported.CombinationDatabase),
+                AssetDatabase.GetAssetPath(imported.UpgradeDatabase),
+                AssetDatabase.GetAssetPath(imported.ProgressionDatabase),
+                AssetDatabase.GetAssetPath(imported.RunConfig),
+                ContentSetAssetPath,
+                "Assets/Configs/Registries/HeroPrefabRegistry.asset",
+                "Assets/Configs/Registries/MobPrefabRegistry.asset",
+            };
+
+            assetPaths.RemoveAll(string.IsNullOrWhiteSpace);
+            AssetDatabase.ForceReserializeAssets(assetPaths);
         }
 
         private static HeroPresenter CreateOrLoadHeroPlaceholderPrefab(HeroConfig heroConfig)
@@ -860,6 +911,7 @@ namespace DiceBattler.EditorTools
             public UpgradeDatabase UpgradeDatabase;
             public ProgressionDatabase ProgressionDatabase;
             public RunConfig RunConfig;
+            public int WaveCount;
         }
     }
 }
