@@ -169,10 +169,12 @@ namespace DiceBattler.Tests
             {
                 CombatHudPresenter presenter = root.AddComponent<CombatHudPresenter>();
                 Text damageDealtText = CreateText(root, "DamageDealtText");
+                Text damageTakenText = CreateText(root, "DamageTakenText");
 
-                presenter.Configure(null, null, null, null, null, damageDealtText, null);
+                presenter.Configure(null, null, null, null, null, damageDealtText, damageTakenText, null);
 
                 Assert.That(damageDealtText.gameObject.activeSelf, Is.False);
+                Assert.That(damageTakenText.gameObject.activeSelf, Is.False);
 
                 presenter.ShowDamageDealt(17);
 
@@ -196,7 +198,7 @@ namespace DiceBattler.Tests
             try
             {
                 CombatFlowController flowController = root.AddComponent<CombatFlowController>();
-                CombatHudPresenter hudPresenter = CreateHudPresenter(root, out Text damageDealtText);
+                CombatHudPresenter hudPresenter = CreateHudPresenter(root, out Text damageDealtText, out _);
                 EnemyRuntimeUnit enemy = new EnemyRuntimeUnit(CreateMob("slime"), FormationSlot.FrontCenter);
 
                 SetPrivateField(flowController, "hudPresenter", hudPresenter);
@@ -214,6 +216,31 @@ namespace DiceBattler.Tests
                 Assert.That(enemy.CurrentHp, Is.EqualTo(0));
                 Assert.That(damageDealtText.gameObject.activeSelf, Is.True);
                 Assert.That(damageDealtText.text, Is.EqualTo("Damage dealt: 17"));
+            }
+            finally
+            {
+                Object.DestroyImmediate(root);
+            }
+        }
+
+        [Test]
+        public void ApplyEnemyDamageUsesEnemyDamageForRightSideText()
+        {
+            GameObject root = new GameObject("CombatEnemyDamageFlowTest");
+            try
+            {
+                CombatFlowController flowController = root.AddComponent<CombatFlowController>();
+                CombatHudPresenter hudPresenter = CreateHudPresenter(root, out _, out Text damageTakenText);
+                RunSession session = CreateRunSession();
+
+                SetPrivateField(flowController, "hudPresenter", hudPresenter);
+                SetPrivateField(flowController, "runSession", session);
+
+                InvokePrivateMethod(flowController, "ApplyEnemyDamage", 4);
+
+                Assert.That(session.Hero.CurrentHp, Is.EqualTo(16));
+                Assert.That(damageTakenText.gameObject.activeSelf, Is.True);
+                Assert.That(damageTakenText.text, Is.EqualTo("Damage dealt: 4"));
             }
             finally
             {
@@ -372,10 +399,10 @@ namespace DiceBattler.Tests
 
         private static CombatHudPresenter CreateHudPresenter(GameObject root)
         {
-            return CreateHudPresenter(root, out _);
+            return CreateHudPresenter(root, out _, out _);
         }
 
-        private static CombatHudPresenter CreateHudPresenter(GameObject root, out Text damageDealtText)
+        private static CombatHudPresenter CreateHudPresenter(GameObject root, out Text damageDealtText, out Text damageTakenText)
         {
             GameObject hudObject = new GameObject("Hud");
             hudObject.transform.SetParent(root.transform);
@@ -385,7 +412,8 @@ namespace DiceBattler.Tests
             rerollObject.transform.SetParent(hudObject.transform);
             Text rerollText = rerollObject.AddComponent<Text>();
             damageDealtText = CreateText(hudObject, "DamageDealtText");
-            presenter.Configure(null, null, null, rerollText, null, damageDealtText, null);
+            damageTakenText = CreateText(hudObject, "DamageTakenText");
+            presenter.Configure(null, null, null, rerollText, null, damageDealtText, damageTakenText, null);
             return presenter;
         }
 

@@ -17,6 +17,7 @@ namespace DiceBattler.Presentation
         [SerializeField] private Text rerollText;
         [SerializeField] private Text damagePreviewText;
         [SerializeField] private Text damageDealtText;
+        [SerializeField] private Text damageTakenText;
         [SerializeField] private Button attackButton;
 
         public void Configure(
@@ -26,6 +27,7 @@ namespace DiceBattler.Presentation
             Text rerollLabel,
             Text damagePreviewLabel,
             Text damageDealtLabel,
+            Text damageTakenLabel,
             Button attackCta)
         {
             expBar = expBarSlider;
@@ -34,8 +36,10 @@ namespace DiceBattler.Presentation
             rerollText = rerollLabel;
             damagePreviewText = damagePreviewLabel;
             damageDealtText = damageDealtLabel;
+            damageTakenText = damageTakenLabel;
             attackButton = attackCta;
             HideDamageDealt();
+            HideDamageTaken();
         }
 
         public void BindAttack(Action onAttackPressed)
@@ -106,6 +110,23 @@ namespace DiceBattler.Presentation
             if (damageDealtText != null)
             {
                 damageDealtText.gameObject.SetActive(false);
+            }
+        }
+
+        public void ShowDamageTaken(int amount)
+        {
+            if (damageTakenText != null)
+            {
+                damageTakenText.text = $"Damage dealt: {amount}";
+                damageTakenText.gameObject.SetActive(true);
+            }
+        }
+
+        public void HideDamageTaken()
+        {
+            if (damageTakenText != null)
+            {
+                damageTakenText.gameObject.SetActive(false);
             }
         }
 

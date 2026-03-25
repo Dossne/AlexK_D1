@@ -58,6 +58,9 @@ namespace DiceBattler.Presentation
 
     internal sealed class PlaceholderSceneGraph
     {
+        private const string DamageDealtLabelPrefabPath = "DiceBattler/UI/DamageDealtLabel";
+        private const string DamageTakenLabelPrefabPath = "DiceBattler/UI/DamageTakenLabel";
+
         public CombatHudPresenter HudPresenter { get; private set; }
         public HeroPresenter HeroPresenter { get; private set; }
         public EnemyPresenter[] EnemyPresenters { get; private set; }
@@ -114,11 +117,63 @@ namespace DiceBattler.Presentation
             Text waveText = CreateText(hudRoot.transform, "WaveText", font, "Waves 1/3", 30, TextAnchor.MiddleRight, new Vector2(0.65f, 0.9f), new Vector2(0.93f, 0.935f));
             Text damagePreview = CreateText(hudRoot.transform, "DamagePreview", font, "Damage value: 0 No Combination x1 + Bonus 0", 28, TextAnchor.MiddleCenter, new Vector2(0.12f, 0.33f), new Vector2(0.88f, 0.39f));
             Text rerollText = CreateText(hudRoot.transform, "RerollText", font, "3/3", 28, TextAnchor.MiddleCenter, new Vector2(0.18f, 0.16f), new Vector2(0.36f, 0.21f));
-            Text damageDealt = CreateText(hudRoot.transform, "DamageDealt", font, "Damage dealt: 0", 28, TextAnchor.UpperCenter, new Vector2(0.76f, 0.56f), new Vector2(0.96f, 0.72f));
+            Text damageDealt = CreateDamageLabel(
+                hudRoot.transform,
+                font,
+                DamageDealtLabelPrefabPath,
+                "DamageDealt",
+                "Damage dealt: 0",
+                new Vector2(0.04f, 0.5f),
+                new Vector2(0.24f, 0.72f));
+            Text damageTaken = CreateDamageLabel(
+                hudRoot.transform,
+                font,
+                DamageTakenLabelPrefabPath,
+                "DamageTaken",
+                "Damage taken: 0",
+                new Vector2(0.76f, 0.5f),
+                new Vector2(0.96f, 0.72f));
 
             attackButton = CreateButton(hudRoot.transform, font, "AttackButton", "ATTACK", new Vector2(0.62f, 0.12f), new Vector2(0.9f, 0.2f), new Color(0.88f, 0.34f, 0.16f));
-            presenter.Configure(expBar, levelText, waveText, rerollText, damagePreview, damageDealt, attackButton);
+            presenter.Configure(expBar, levelText, waveText, rerollText, damagePreview, damageDealt, damageTaken, attackButton);
             return presenter;
+        }
+
+        private static Text CreateDamageLabel(
+            Transform parent,
+            Font font,
+            string resourcePath,
+            string fallbackName,
+            string initialText,
+            Vector2 fallbackAnchorMin,
+            Vector2 fallbackAnchorMax)
+        {
+            GameObject prefab = Resources.Load<GameObject>(resourcePath);
+            GameObject labelObject = prefab != null
+                ? Object.Instantiate(prefab, parent, false)
+                : CreateRectObject(parent, fallbackName, fallbackAnchorMin, fallbackAnchorMax, Vector2.zero, Vector2.zero);
+
+            labelObject.name = fallbackName;
+
+            if (labelObject.GetComponent<CanvasRenderer>() == null)
+            {
+                labelObject.AddComponent<CanvasRenderer>();
+            }
+
+            Text label = labelObject.GetComponent<Text>();
+            if (label == null)
+            {
+                label = labelObject.AddComponent<Text>();
+            }
+
+            label.font = font;
+            label.text = initialText;
+            label.fontSize = 28;
+            label.alignment = TextAnchor.UpperCenter;
+            label.color = Color.white;
+            label.raycastTarget = false;
+
+            return label;
         }
 
         private static HeroPresenter CreateHero(Transform canvasRoot, Font font)
