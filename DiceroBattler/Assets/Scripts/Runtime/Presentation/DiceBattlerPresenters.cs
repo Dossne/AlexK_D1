@@ -35,6 +35,7 @@ namespace DiceBattler.Presentation
             damagePreviewText = damagePreviewLabel;
             damageDealtText = damageDealtLabel;
             attackButton = attackCta;
+            HideDamageDealt();
         }
 
         public void BindAttack(Action onAttackPressed)
@@ -91,11 +92,20 @@ namespace DiceBattler.Presentation
             }
         }
 
-        public void SetDamagePanel(int amount)
+        public void ShowDamageDealt(int amount)
         {
             if (damageDealtText != null)
             {
                 damageDealtText.text = $"Damage dealt: {amount}";
+                damageDealtText.gameObject.SetActive(true);
+            }
+        }
+
+        public void HideDamageDealt()
+        {
+            if (damageDealtText != null)
+            {
+                damageDealtText.gameObject.SetActive(false);
             }
         }
 

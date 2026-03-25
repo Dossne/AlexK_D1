@@ -84,7 +84,7 @@ namespace DiceBattler.Runtime
 
             runSession = new RunSession(contentSet.heroConfig, contentSet.runConfig);
             heroPresenter.SetHero(runSession.Hero);
-            hudPresenter.SetDamagePanel(0);
+            hudPresenter.HideDamageDealt();
             hudPresenter.SetWave(runSession.CurrentWaveNumber, contentSet.runConfig.totalWaves);
             hudPresenter.SetLevel(runSession.CurrentLevel);
             RefreshExpHud();
@@ -187,6 +187,7 @@ namespace DiceBattler.Runtime
         private IEnumerator RunPlayerRoll()
         {
             currentPhase = CombatFlowPhase.PlayerRoll;
+            hudPresenter.HideDamageDealt();
             rerollBudget.BeginTurn(contentSet.runConfig.rerollsPerTurnDefault);
             runSession.RerollsRemaining = rerollBudget.Remaining;
             diceController.BeginTurn(runSession.UnlockedDiceCount, rerollBudget.Remaining);
@@ -270,18 +271,20 @@ namespace DiceBattler.Runtime
             EnemyRuntimeUnit target = targetingService.ResolveHeroTarget(activeEnemies);
             if (target == null)
             {
+                hudPresenter.HideDamageDealt();
                 yield return ResolveWaveEnd();
                 yield break;
             }
 
             yield return heroPresenter.PlayAttack();
-            target.ApplyDamage(latestDamage.FinalDamage);
-            hudPresenter.SetDamagePanel(latestDamage.FinalDamage);
+            ApplyHeroDamage(target);
             EnemyPresenter targetPresenter = FindPresenter(target);
             if (targetPresenter != null)
             {
                 targetPresenter.PlayHitOrDeath(target.IsAlive, latestDamage.FinalDamage);
             }
+
+            yield return ShowDamageDealtForConfiguredDuration();
 
             if (!target.IsAlive)
             {
@@ -317,6 +320,7 @@ namespace DiceBattler.Runtime
 
                 if (!runSession.Hero.IsAlive)
                 {
+                    hudPresenter.HideDamageDealt();
                     yield return heroPresenter.PlayDeath();
                     EnterDefeat(null);
                     yield break;
@@ -337,6 +341,7 @@ namespace DiceBattler.Runtime
         private IEnumerator ResolveWaveEnd()
         {
             currentPhase = CombatFlowPhase.PostWaveResolve;
+            hudPresenter.HideDamageDealt();
             WaveConfig wave = contentSet.waveDatabase.GetWave(runSession.CurrentWaveNumber);
             if (wave != null)
             {
@@ -379,12 +384,14 @@ namespace DiceBattler.Runtime
         private void EnterVictory()
         {
             currentPhase = CombatFlowPhase.VictoryOverlay;
+            hudPresenter.HideDamageDealt();
             overlayController.ShowVictory(StartRun);
         }
 
         private void EnterDefeat(string errorMessage)
         {
             currentPhase = CombatFlowPhase.DefeatOverlay;
+            hudPresenter.HideDamageDealt();
             if (!string.IsNullOrEmpty(errorMessage))
             {
                 Debug.LogError(errorMessage);
@@ -460,6 +467,23 @@ namespace DiceBattler.Runtime
             }
 
             return null;
+        }
+
+        private void ApplyHeroDamage(EnemyRuntimeUnit target)
+        {
+            target.ApplyDamage(latestDamage.FinalDamage);
+            hudPresenter.ShowDamageDealt(latestDamage.FinalDamage);
+        }
+
+        private IEnumerator ShowDamageDealtForConfiguredDuration()
+        {
+            float duration = Mathf.Max(0f, contentSet.runConfig.damagePanelDisplayDuration);
+            if (duration > 0f)
+            {
+                yield return new WaitForSeconds(duration);
+            }
+
+            hudPresenter.HideDamageDealt();
         }
 
         private static List<FormationSlot> ResolveFormationSlots(int enemyCount)

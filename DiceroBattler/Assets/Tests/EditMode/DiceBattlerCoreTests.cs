@@ -162,6 +162,66 @@ namespace DiceBattler.Tests
         }
 
         [Test]
+        public void CombatHudPresenterHidesAndShowsDamageDealtText()
+        {
+            GameObject root = new GameObject("HudPresenterTest");
+            try
+            {
+                CombatHudPresenter presenter = root.AddComponent<CombatHudPresenter>();
+                Text damageDealtText = CreateText(root, "DamageDealtText");
+
+                presenter.Configure(null, null, null, null, null, damageDealtText, null);
+
+                Assert.That(damageDealtText.gameObject.activeSelf, Is.False);
+
+                presenter.ShowDamageDealt(17);
+
+                Assert.That(damageDealtText.gameObject.activeSelf, Is.True);
+                Assert.That(damageDealtText.text, Is.EqualTo("Damage dealt: 17"));
+
+                presenter.HideDamageDealt();
+
+                Assert.That(damageDealtText.gameObject.activeSelf, Is.False);
+            }
+            finally
+            {
+                Object.DestroyImmediate(root);
+            }
+        }
+
+        [Test]
+        public void ApplyHeroDamageUsesFinalDamageForDamageDealtText()
+        {
+            GameObject root = new GameObject("CombatDamageFlowTest");
+            try
+            {
+                CombatFlowController flowController = root.AddComponent<CombatFlowController>();
+                CombatHudPresenter hudPresenter = CreateHudPresenter(root, out Text damageDealtText);
+                EnemyRuntimeUnit enemy = new EnemyRuntimeUnit(CreateMob("slime"), FormationSlot.FrontCenter);
+
+                SetPrivateField(flowController, "hudPresenter", hudPresenter);
+                SetPrivateField(flowController, "latestDamage", new DamageCalculationResult
+                {
+                    DiceSum = 9,
+                    FinalDamage = 17,
+                    Multiplier = 1.8f,
+                    FlatBonus = 1,
+                    Combination = CombinationFamily.Straight,
+                });
+
+                InvokePrivateMethod(flowController, "ApplyHeroDamage", enemy);
+
+                Assert.That(enemy.CurrentHp, Is.EqualTo(0));
+                Assert.That(damageDealtText.gameObject.activeSelf, Is.True);
+                Assert.That(damageDealtText.text, Is.EqualTo("Damage dealt: 17"));
+            }
+            finally
+            {
+                Object.DestroyImmediate(root);
+            }
+        }
+
+        [Test]
         public void ImportValidationCatchesDuplicateIdsAndBrokenWaveReferences()
         {
             ImportedGameData data = CreateValidImportedData();
@@ -312,6 +372,11 @@ namespace DiceBattler.Tests
 
         private static CombatHudPresenter CreateHudPresenter(GameObject root)
         {
+            return CreateHudPresenter(root, out _);
+        }
+
+        private static CombatHudPresenter CreateHudPresenter(GameObject root, out Text damageDealtText)
+        {
             GameObject hudObject = new GameObject("Hud");
             hudObject.transform.SetParent(root.transform);
             CombatHudPresenter presenter = hudObject.AddComponent<CombatHudPresenter>();
@@ -319,8 +384,16 @@ namespace DiceBattler.Tests
             GameObject rerollObject = new GameObject("RerollText");
             rerollObject.transform.SetParent(hudObject.transform);
             Text rerollText = rerollObject.AddComponent<Text>();
-            presenter.Configure(null, null, null, rerollText, null, null, null);
+            damageDealtText = CreateText(hudObject, "DamageDealtText");
+            presenter.Configure(null, null, null, rerollText, null, damageDealtText, null);
             return presenter;
+        }
+
+        private static Text CreateText(GameObject parent, string name)
+        {
+            GameObject textObject = new GameObject(name);
+            textObject.transform.SetParent(parent.transform);
+            return textObject.AddComponent<Text>();
         }
 
         private static DiePresenter[] CreateDiePresenters(GameObject root, int count)
