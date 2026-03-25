@@ -12,10 +12,10 @@ MonoBehaviour:
   m_Script: {fileID: 0}
   m_Name: Mob_boss_ogre
   m_EditorClassIdentifier: DiceBattler.Runtime:DiceBattler.Configs:MobConfig
-  mobId: boss_ogre
-  displayName: Ogre Boss
-  hp: 120
-  damageMin: 14
-  damageMax: 20
-  expReward: 50
-  prefabKey: boss_ogre
+  mobId: 
+  displayName: 
+  hp: 5
+  damageMin: 1
+  damageMax: 2
+  expReward: 1
+  prefabKey: 

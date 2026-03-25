@@ -466,8 +466,7 @@ namespace DiceBattler.EditorTools
             runConfig.lockedDiceVisible = data.runConfig.lockedDiceVisible;
             EditorUtility.SetDirty(runConfig);
 
-            MobDatabase mobDatabase = CreateOrLoadAsset<MobDatabase>(outputFolderPath, "MobDatabase.asset");
-            mobDatabase.mobs.Clear();
+            List<MobConfig> importedMobs = new List<MobConfig>(data.mobs.Count);
             for (int index = 0; index < data.mobs.Count; index++)
             {
                 MobConfig mob = CreateOrLoadAsset<MobConfig>(outputFolderPath, $"Mob_{data.mobs[index].id}.asset");
@@ -478,23 +477,28 @@ namespace DiceBattler.EditorTools
                 mob.damageMax = data.mobs[index].damageMax;
                 mob.expReward = data.mobs[index].expReward;
                 mob.prefabKey = data.mobs[index].prefabKey;
-                mobDatabase.mobs.Add(mob);
+                importedMobs.Add(mob);
                 EditorUtility.SetDirty(mob);
             }
+
+            MobDatabase mobDatabase = CreateOrLoadAsset<MobDatabase>(outputFolderPath, "MobDatabase.asset");
+            mobDatabase.mobs = importedMobs;
             EditorUtility.SetDirty(mobDatabase);
 
-            WaveDatabase waveDatabase = CreateOrLoadAsset<WaveDatabase>(outputFolderPath, "WaveDatabase.asset");
-            waveDatabase.totalWaves = data.runConfig.totalWaves;
-            waveDatabase.waves.Clear();
+            List<WaveConfig> importedWaves = new List<WaveConfig>(data.waves.Count);
             for (int index = 0; index < data.waves.Count; index++)
             {
                 WaveConfig wave = CreateOrLoadAsset<WaveConfig>(outputFolderPath, $"Wave_{data.waves[index].waveNumber:00}.asset");
                 wave.waveNumber = data.waves[index].waveNumber;
                 wave.mobIds = new List<string>(data.waves[index].mobList);
                 wave.expReward = data.waves[index].expReward;
-                waveDatabase.waves.Add(wave);
+                importedWaves.Add(wave);
                 EditorUtility.SetDirty(wave);
             }
+
+            WaveDatabase waveDatabase = CreateOrLoadAsset<WaveDatabase>(outputFolderPath, "WaveDatabase.asset");
+            waveDatabase.totalWaves = data.runConfig.totalWaves;
+            waveDatabase.waves = importedWaves;
             EditorUtility.SetDirty(waveDatabase);
 
             CombinationDatabase combinationDatabase = CreateOrLoadAsset<CombinationDatabase>(outputFolderPath, "CombinationDatabase.asset");
@@ -513,8 +517,7 @@ namespace DiceBattler.EditorTools
             }
             EditorUtility.SetDirty(combinationDatabase);
 
-            UpgradeDatabase upgradeDatabase = CreateOrLoadAsset<UpgradeDatabase>(outputFolderPath, "UpgradeDatabase.asset");
-            upgradeDatabase.upgrades.Clear();
+            List<UpgradeConfig> importedUpgrades = new List<UpgradeConfig>(data.upgrades.Count);
             for (int index = 0; index < data.upgrades.Count; index++)
             {
                 UpgradeConfig upgrade = CreateOrLoadAsset<UpgradeConfig>(outputFolderPath, $"Upgrade_{data.upgrades[index].id}.asset");
@@ -527,9 +530,12 @@ namespace DiceBattler.EditorTools
                 upgrade.enabled = data.upgrades[index].enabled;
                 upgrade.targetDiceCount = data.upgrades[index].targetDiceCount;
                 upgrade.uiIconKey = data.upgrades[index].uiIconKey;
-                upgradeDatabase.upgrades.Add(upgrade);
+                importedUpgrades.Add(upgrade);
                 EditorUtility.SetDirty(upgrade);
             }
+
+            UpgradeDatabase upgradeDatabase = CreateOrLoadAsset<UpgradeDatabase>(outputFolderPath, "UpgradeDatabase.asset");
+            upgradeDatabase.upgrades = importedUpgrades;
             EditorUtility.SetDirty(upgradeDatabase);
 
             ProgressionDatabase progressionDatabase = CreateOrLoadAsset<ProgressionDatabase>(outputFolderPath, "ProgressionDatabase.asset");
