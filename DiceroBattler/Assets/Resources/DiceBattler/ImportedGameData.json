@@ -1,0 +1,525 @@
+﻿{
+    "hero": {
+        "id": "hero_main",
+        "displayName": "Hero",
+        "maxHp": 100,
+        "startingUnlockedDice": 1,
+        "startingRerollsPerTurn": 3,
+        "startingFlatDamageBonus": 0,
+        "baseRunId": "run_01"
+    },
+    "mobs": [
+        {
+            "id": "slime_green",
+            "displayName": "Green Slime",
+            "hp": 6,
+            "damageMin": 3,
+            "damageMax": 5,
+            "expReward": 4,
+            "prefabKey": "slime_green"
+        },
+        {
+            "id": "slime_blue",
+            "displayName": "Blue Slime",
+            "hp": 8,
+            "damageMin": 4,
+            "damageMax": 6,
+            "expReward": 5,
+            "prefabKey": "slime_blue"
+        },
+        {
+            "id": "slime_red",
+            "displayName": "Red Slime",
+            "hp": 10,
+            "damageMin": 5,
+            "damageMax": 7,
+            "expReward": 6,
+            "prefabKey": "slime_red"
+        },
+        {
+            "id": "goblin_melee",
+            "displayName": "Goblin Fighter",
+            "hp": 12,
+            "damageMin": 5,
+            "damageMax": 8,
+            "expReward": 7,
+            "prefabKey": "goblin_melee"
+        },
+        {
+            "id": "goblin_archer",
+            "displayName": "Goblin Archer",
+            "hp": 10,
+            "damageMin": 4,
+            "damageMax": 7,
+            "expReward": 7,
+            "prefabKey": "goblin_archer"
+        },
+        {
+            "id": "wolf",
+            "displayName": "Wild Wolf",
+            "hp": 14,
+            "damageMin": 6,
+            "damageMax": 9,
+            "expReward": 8,
+            "prefabKey": "wolf"
+        },
+        {
+            "id": "skeleton",
+            "displayName": "Skeleton Warrior",
+            "hp": 16,
+            "damageMin": 6,
+            "damageMax": 10,
+            "expReward": 9,
+            "prefabKey": "skeleton"
+        },
+        {
+            "id": "skeleton_archer",
+            "displayName": "Skeleton Archer",
+            "hp": 14,
+            "damageMin": 5,
+            "damageMax": 9,
+            "expReward": 9,
+            "prefabKey": "skeleton_archer"
+        },
+        {
+            "id": "orc_grunt",
+            "displayName": "Orc Grunt",
+            "hp": 20,
+            "damageMin": 7,
+            "damageMax": 11,
+            "expReward": 11,
+            "prefabKey": "orc_grunt"
+        },
+        {
+            "id": "orc_shaman",
+            "displayName": "Orc Shaman",
+            "hp": 18,
+            "damageMin": 6,
+            "damageMax": 10,
+            "expReward": 12,
+            "prefabKey": "orc_shaman"
+        },
+        {
+            "id": "bandit",
+            "displayName": "Bandit",
+            "hp": 22,
+            "damageMin": 8,
+            "damageMax": 12,
+            "expReward": 13,
+            "prefabKey": "bandit"
+        },
+        {
+            "id": "bandit_leader",
+            "displayName": "Bandit Leader",
+            "hp": 26,
+            "damageMin": 9,
+            "damageMax": 13,
+            "expReward": 15,
+            "prefabKey": "bandit_leader"
+        },
+        {
+            "id": "yeti_small",
+            "displayName": "Small Yeti",
+            "hp": 28,
+            "damageMin": 10,
+            "damageMax": 14,
+            "expReward": 16,
+            "prefabKey": "yeti_small"
+        },
+        {
+            "id": "yeti_large",
+            "displayName": "Large Yeti",
+            "hp": 34,
+            "damageMin": 11,
+            "damageMax": 16,
+            "expReward": 18,
+            "prefabKey": "yeti_large"
+        },
+        {
+            "id": "demon_imp",
+            "displayName": "Imp Demon",
+            "hp": 24,
+            "damageMin": 9,
+            "damageMax": 14,
+            "expReward": 17,
+            "prefabKey": "demon_imp"
+        },
+        {
+            "id": "boss_ogre",
+            "displayName": "Ogre Boss",
+            "hp": 120,
+            "damageMin": 14,
+            "damageMax": 20,
+            "expReward": 50,
+            "prefabKey": "boss_ogre"
+        }
+    ],
+    "waves": [
+        {
+            "waveNumber": 1,
+            "mobList": [
+                "slime_green"
+            ],
+            "expReward": 4
+        },
+        {
+            "waveNumber": 2,
+            "mobList": [
+                "slime_green",
+                "slime_green"
+            ],
+            "expReward": 4
+        },
+        {
+            "waveNumber": 3,
+            "mobList": [
+                "slime_blue"
+            ],
+            "expReward": 5
+        },
+        {
+            "waveNumber": 4,
+            "mobList": [
+                "slime_blue",
+                "slime_green"
+            ],
+            "expReward": 5
+        },
+        {
+            "waveNumber": 5,
+            "mobList": [
+                "slime_red"
+            ],
+            "expReward": 6
+        },
+        {
+            "waveNumber": 6,
+            "mobList": [
+                "goblin_melee"
+            ],
+            "expReward": 7
+        },
+        {
+            "waveNumber": 7,
+            "mobList": [
+                "goblin_archer",
+                "goblin_melee"
+            ],
+            "expReward": 7
+        },
+        {
+            "waveNumber": 8,
+            "mobList": [
+                "wolf"
+            ],
+            "expReward": 8
+        },
+        {
+            "waveNumber": 9,
+            "mobList": [
+                "wolf",
+                "slime_blue"
+            ],
+            "expReward": 8
+        },
+        {
+            "waveNumber": 10,
+            "mobList": [
+                "skeleton"
+            ],
+            "expReward": 9
+        },
+        {
+            "waveNumber": 11,
+            "mobList": [
+                "skeleton_archer",
+                "skeleton"
+            ],
+            "expReward": 9
+        },
+        {
+            "waveNumber": 12,
+            "mobList": [
+                "orc_grunt"
+            ],
+            "expReward": 11
+        },
+        {
+            "waveNumber": 13,
+            "mobList": [
+                "orc_shaman",
+                "orc_grunt"
+            ],
+            "expReward": 12
+        },
+        {
+            "waveNumber": 14,
+            "mobList": [
+                "bandit"
+            ],
+            "expReward": 13
+        },
+        {
+            "waveNumber": 15,
+            "mobList": [
+                "bandit_leader"
+            ],
+            "expReward": 15
+        },
+        {
+            "waveNumber": 16,
+            "mobList": [
+                "yeti_small"
+            ],
+            "expReward": 16
+        },
+        {
+            "waveNumber": 17,
+            "mobList": [
+                "yeti_small",
+                "wolf"
+            ],
+            "expReward": 16
+        },
+        {
+            "waveNumber": 18,
+            "mobList": [
+                "yeti_large"
+            ],
+            "expReward": 18
+        },
+        {
+            "waveNumber": 19,
+            "mobList": [
+                "demon_imp"
+            ],
+            "expReward": 17
+        },
+        {
+            "waveNumber": 20,
+            "mobList": [
+                "demon_imp",
+                "bandit"
+            ],
+            "expReward": 17
+        },
+        {
+            "waveNumber": 21,
+            "mobList": [
+                "orc_grunt",
+                "orc_shaman"
+            ],
+            "expReward": 12
+        },
+        {
+            "waveNumber": 22,
+            "mobList": [
+                "yeti_large",
+                "yeti_small"
+            ],
+            "expReward": 18
+        },
+        {
+            "waveNumber": 23,
+            "mobList": [
+                "bandit_leader",
+                "bandit"
+            ],
+            "expReward": 15
+        },
+        {
+            "waveNumber": 24,
+            "mobList": [
+                "skeleton",
+                "skeleton_archer"
+            ],
+            "expReward": 10
+        },
+        {
+            "waveNumber": 25,
+            "mobList": [
+                "demon_imp",
+                "yeti_small"
+            ],
+            "expReward": 18
+        },
+        {
+            "waveNumber": 26,
+            "mobList": [
+                "yeti_large",
+                "orc_grunt"
+            ],
+            "expReward": 18
+        },
+        {
+            "waveNumber": 27,
+            "mobList": [
+                "bandit_leader",
+                "yeti_large"
+            ],
+            "expReward": 20
+        },
+        {
+            "waveNumber": 28,
+            "mobList": [
+                "demon_imp",
+                "orc_shaman"
+            ],
+            "expReward": 20
+        },
+        {
+            "waveNumber": 29,
+            "mobList": [
+                "yeti_large",
+                "yeti_large"
+            ],
+            "expReward": 22
+        },
+        {
+            "waveNumber": 30,
+            "mobList": [
+                "boss_ogre"
+            ],
+            "expReward": 40
+        }
+    ],
+    "combinations": [
+        {
+            "combination": 1,
+            "one": 1.0,
+            "two": 1.2000000476837159,
+            "three": 1.2999999523162842,
+            "four": 1.5,
+            "five": 1.7000000476837159
+        },
+        {
+            "combination": 2,
+            "one": 1.0,
+            "two": 1.0,
+            "three": 1.0,
+            "four": 1.7999999523162842,
+            "five": 2.0
+        },
+        {
+            "combination": 3,
+            "one": 1.0,
+            "two": 1.0,
+            "three": 1.600000023841858,
+            "four": 1.899999976158142,
+            "five": 2.200000047683716
+        },
+        {
+            "combination": 4,
+            "one": 1.0,
+            "two": 1.0,
+            "three": 1.0,
+            "four": 2.299999952316284,
+            "five": 2.799999952316284
+        },
+        {
+            "combination": 5,
+            "one": 1.0,
+            "two": 1.0,
+            "three": 1.399999976158142,
+            "four": 1.7999999523162842,
+            "five": 2.5
+        }
+    ],
+    "upgrades": [
+        {
+            "id": "unlock_die_2",
+            "type": 0,
+            "title": "Add Die",
+            "description": "Unlock one more die",
+            "value": 1.0,
+            "eligibleFromLevel": 1,
+            "enabled": true,
+            "targetDiceCount": 2,
+            "uiIconKey": "upgrade_die"
+        },
+        {
+            "id": "unlock_die_3",
+            "type": 0,
+            "title": "Add Die",
+            "description": "Unlock one more die",
+            "value": 1.0,
+            "eligibleFromLevel": 1,
+            "enabled": true,
+            "targetDiceCount": 3,
+            "uiIconKey": "upgrade_die"
+        },
+        {
+            "id": "unlock_die_4",
+            "type": 0,
+            "title": "Add Die",
+            "description": "Unlock one more die",
+            "value": 1.0,
+            "eligibleFromLevel": 1,
+            "enabled": true,
+            "targetDiceCount": 4,
+            "uiIconKey": "upgrade_die"
+        },
+        {
+            "id": "unlock_die_5",
+            "type": 0,
+            "title": "Add Die",
+            "description": "Unlock one more die",
+            "value": 1.0,
+            "eligibleFromLevel": 1,
+            "enabled": true,
+            "targetDiceCount": 5,
+            "uiIconKey": "upgrade_die"
+        },
+        {
+            "id": "heal_25_percent",
+            "type": 1,
+            "title": "Restore Health",
+            "description": "Restore 25% of max HP",
+            "value": 25.0,
+            "eligibleFromLevel": 1,
+            "enabled": true,
+            "targetDiceCount": 0,
+            "uiIconKey": "upgrade_heal"
+        },
+        {
+            "id": "flat_bonus_3",
+            "type": 2,
+            "title": "Increase Damage",
+            "description": "Add +3 final damage",
+            "value": 3.0,
+            "eligibleFromLevel": 1,
+            "enabled": true,
+            "targetDiceCount": 0,
+            "uiIconKey": "upgrade_damage"
+        }
+    ],
+    "progression": [
+        {
+            "level": 1,
+            "expToNext": 10
+        },
+        {
+            "level": 2,
+            "expToNext": 15
+        },
+        {
+            "level": 3,
+            "expToNext": 20
+        },
+        {
+            "level": 4,
+            "expToNext": 25
+        }
+    ],
+    "runConfig": {
+        "runId": "run_01",
+        "totalWaves": 30,
+        "diceSlotsTotal": 5,
+        "rerollsPerTurnDefault": 3,
+        "diceHighlightDuration": 0.4000000059604645,
+        "postWaveRunTransitionDuration": 1.2000000476837159,
+        "damagePanelDisplayDuration": 1.0,
+        "showBonusWhenZero": true,
+        "lockedDiceVisible": true
+    }
+}

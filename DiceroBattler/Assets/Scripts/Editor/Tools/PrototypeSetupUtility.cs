@@ -173,7 +173,7 @@ namespace DiceBattler.EditorTools
             SheetsImportSettings importSettings = CreateOrLoadAsset<SheetsImportSettings>(DefaultsFolder, "SheetsImportSettings.asset");
             importSettings.googleSheetUrl = "https://docs.google.com/spreadsheets/d/1ocPHKALVIMOhgBFsvG_mnZk3aFEVDNsVOsuQ9Y98wEQ/edit?usp=sharing";
             importSettings.csvFolderPath = "Assets/Data/ImportedCsv";
-            importSettings.outputFolderPath = "Assets/Configs/Imported";
+            importSettings.outputFolderPath = "Assets/Resources/DiceBattler/Imported";
             if (importSettings.sheetTabs == null || importSettings.sheetTabs.Count == 0)
             {
                 importSettings.sheetTabs = new List<GoogleSheetTabReference>
@@ -223,7 +223,7 @@ namespace DiceBattler.EditorTools
             SheetsImportSettings importSettings = CreateOrLoadAsset<SheetsImportSettings>(DefaultsFolder, "SheetsImportSettings.asset");
             importSettings.googleSheetUrl = "https://docs.google.com/spreadsheets/d/1ocPHKALVIMOhgBFsvG_mnZk3aFEVDNsVOsuQ9Y98wEQ/edit?usp=sharing";
             importSettings.csvFolderPath = "Assets/Data/ImportedCsv";
-            importSettings.outputFolderPath = "Assets/Configs/Imported";
+            importSettings.outputFolderPath = "Assets/Resources/DiceBattler/Imported";
             if (importSettings.sheetTabs == null || importSettings.sheetTabs.Count == 0)
             {
                 importSettings.sheetTabs = new List<GoogleSheetTabReference>

@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: DiceBattler.Runtime:DiceBattler.Configs:SheetsImportSettings
   googleSheetUrl: https://docs.google.com/spreadsheets/d/1ocPHKALVIMOhgBFsvG_mnZk3aFEVDNsVOsuQ9Y98wEQ/edit?usp=sharing
   csvFolderPath: Assets/Data/ImportedCsv
-  outputFolderPath: Assets/Configs/Imported
+  outputFolderPath: Assets/Resources/DiceBattler/Imported
   spreadsheetId: 1ocPHKALVIMOhgBFsvG_mnZk3aFEVDNsVOsuQ9Y98wEQ
   sheetTabs:
   - fileName: Hero

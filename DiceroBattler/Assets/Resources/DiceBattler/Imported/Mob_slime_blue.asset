@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 0}
+  m_Name: Mob_slime_blue
+  m_EditorClassIdentifier: DiceBattler.Runtime:DiceBattler.Configs:MobConfig
+  mobId: slime_blue
+  displayName: Blue Slime
+  hp: 8
+  damageMin: 4
+  damageMax: 6
+  expReward: 5
+  prefabKey: slime_blue

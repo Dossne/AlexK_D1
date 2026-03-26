@@ -19,10 +19,11 @@ namespace DiceBattler.EditorTools
     public sealed class CsvImporterWindow : EditorWindow
     {
         private const string DefaultsFolder = "Assets/Configs/Defaults";
-        private const string ImportedFolderDefault = "Assets/Configs/Imported";
+        private const string ImportedFolderDefault = "Assets/Resources/DiceBattler/Imported";
         private const string GeneratedPrefabsFolder = "Assets/Prefabs/Generated";
         private const string ResourcesFolder = "Assets/Resources/DiceBattler";
         private const string ContentSetAssetPath = "Assets/Resources/DiceBattler/PrototypeContentSet.asset";
+        private const string RuntimeSnapshotJsonPath = "Assets/Resources/DiceBattler/ImportedGameData.json";
         private static readonly string[] RequiredTabNames = { "Hero", "Mobs", "Waves", "Combinations", "Upgrades", "Progression", "RunConfig" };
         private static readonly HttpClient HttpClient = new HttpClient();
         private static readonly Regex SpreadsheetIdRegex = new Regex(@"/spreadsheets/d/([a-zA-Z0-9-_]+)", RegexOptions.Compiled);
@@ -165,13 +166,15 @@ namespace DiceBattler.EditorTools
                 return;
             }
 
-            ImportedAssetSet importedAssetSet = WriteAssets(importedData, settings.outputFolderPath);
-            PrototypeContentSet contentSet = UpdateContentSetAndGeneratedPrefabs(importedAssetSet);
+            ImportedAssetSet authoringAssetSet = WriteAssets(importedData, settings.outputFolderPath);
+            ImportedAssetSet runtimeAssetSet = EnsureBuildImportedAssets(importedData, authoringAssetSet);
+            WriteRuntimeSnapshot(importedData);
+            PrototypeContentSet contentSet = UpdateContentSetAndGeneratedPrefabs(runtimeAssetSet);
             AssignImportedContentSetToOpenBootstraps(contentSet);
-            ForcePersistImportedAssets(importedAssetSet);
+            ForcePersistImportedAssets(authoringAssetSet, runtimeAssetSet);
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
-            Debug.Log($"Dice Battler config import completed successfully. Waves imported: {importedAssetSet.WaveCount}. RunConfig totalWaves: {importedAssetSet.RunConfig.totalWaves}.");
+            Debug.Log($"Dice Battler config import completed successfully. Waves imported: {runtimeAssetSet.WaveCount}. RunConfig totalWaves: {runtimeAssetSet.RunConfig.totalWaves}. Build content path: {AssetDatabase.GetAssetPath(runtimeAssetSet.RunConfig)}.");
         }
 
         private void EnsureSupportAssets()
@@ -188,12 +191,18 @@ namespace DiceBattler.EditorTools
                     settings.csvFolderPath = "Assets/Data/ImportedCsv";
                 }
 
-                if (string.IsNullOrWhiteSpace(settings.outputFolderPath))
+                if (string.IsNullOrWhiteSpace(settings.outputFolderPath)
+                    || string.Equals(settings.outputFolderPath, "Assets/Configs/Imported", StringComparison.OrdinalIgnoreCase))
                 {
                     settings.outputFolderPath = ImportedFolderDefault;
                 }
 
                 EnsureRequiredTabs(settings);
+                EditorUtility.SetDirty(settings);
+            }
+            else if (string.Equals(settings.outputFolderPath, "Assets/Configs/Imported", StringComparison.OrdinalIgnoreCase))
+            {
+                settings.outputFolderPath = ImportedFolderDefault;
                 EditorUtility.SetDirty(settings);
             }
 
@@ -447,6 +456,7 @@ namespace DiceBattler.EditorTools
         private static ImportedAssetSet WriteAssets(ImportedGameData data, string outputFolderPath)
         {
             EnsureFolder(outputFolderPath);
+            DeleteGeneratedImportAssets(outputFolderPath);
 
             HeroConfig hero = CreateOrLoadAsset<HeroConfig>(outputFolderPath, "HeroConfig.asset");
             hero.heroId = data.hero.id;
@@ -567,6 +577,46 @@ namespace DiceBattler.EditorTools
             };
         }
 
+        private static void WriteRuntimeSnapshot(ImportedGameData data)
+        {
+            EnsureFolder(ResourcesFolder);
+            string json = JsonUtility.ToJson(data, true);
+            File.WriteAllText(RuntimeSnapshotJsonPath, json, Encoding.UTF8);
+            AssetDatabase.ImportAsset(RuntimeSnapshotJsonPath, ImportAssetOptions.ForceUpdate);
+        }
+
+        private static void DeleteGeneratedImportAssets(string outputFolderPath)
+        {
+            string[] assetGuids = AssetDatabase.FindAssets(string.Empty, new[] { outputFolderPath });
+            for (int index = 0; index < assetGuids.Length; index++)
+            {
+                string assetPath = AssetDatabase.GUIDToAssetPath(assetGuids[index]);
+                if (!assetPath.EndsWith(".asset", StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+
+                string fileName = Path.GetFileName(assetPath);
+                if (fileName.StartsWith("Mob_", StringComparison.OrdinalIgnoreCase)
+                    || fileName.StartsWith("Wave_", StringComparison.OrdinalIgnoreCase)
+                    || fileName.StartsWith("Upgrade_", StringComparison.OrdinalIgnoreCase))
+                {
+                    AssetDatabase.DeleteAsset(assetPath);
+                }
+            }
+        }
+
+        private static ImportedAssetSet EnsureBuildImportedAssets(ImportedGameData data, ImportedAssetSet authoringAssetSet)
+        {
+            if (authoringAssetSet.RunConfig != null
+                && string.Equals(AssetDatabase.GetAssetPath(authoringAssetSet.RunConfig), $"{ImportedFolderDefault}/RunConfig.asset", StringComparison.OrdinalIgnoreCase))
+            {
+                return authoringAssetSet;
+            }
+
+            return WriteAssets(data, ImportedFolderDefault);
+        }
+
         private static PrototypeContentSet UpdateContentSetAndGeneratedPrefabs(ImportedAssetSet imported)
         {
             EnsureFolder(ResourcesFolder);
@@ -653,23 +703,34 @@ namespace DiceBattler.EditorTools
             }
         }
 
-        private static void ForcePersistImportedAssets(ImportedAssetSet imported)
+        private static void ForcePersistImportedAssets(params ImportedAssetSet[] importedSets)
         {
             List<string> assetPaths = new List<string>
             {
-                AssetDatabase.GetAssetPath(imported.HeroConfig),
-                AssetDatabase.GetAssetPath(imported.MobDatabase),
-                AssetDatabase.GetAssetPath(imported.WaveDatabase),
-                AssetDatabase.GetAssetPath(imported.CombinationDatabase),
-                AssetDatabase.GetAssetPath(imported.UpgradeDatabase),
-                AssetDatabase.GetAssetPath(imported.ProgressionDatabase),
-                AssetDatabase.GetAssetPath(imported.RunConfig),
                 ContentSetAssetPath,
                 "Assets/Configs/Registries/HeroPrefabRegistry.asset",
                 "Assets/Configs/Registries/MobPrefabRegistry.asset",
             };
 
+            for (int index = 0; index < importedSets.Length; index++)
+            {
+                ImportedAssetSet imported = importedSets[index];
+                if (imported.RunConfig == null)
+                {
+                    continue;
+                }
+
+                assetPaths.Add(AssetDatabase.GetAssetPath(imported.HeroConfig));
+                assetPaths.Add(AssetDatabase.GetAssetPath(imported.MobDatabase));
+                assetPaths.Add(AssetDatabase.GetAssetPath(imported.WaveDatabase));
+                assetPaths.Add(AssetDatabase.GetAssetPath(imported.CombinationDatabase));
+                assetPaths.Add(AssetDatabase.GetAssetPath(imported.UpgradeDatabase));
+                assetPaths.Add(AssetDatabase.GetAssetPath(imported.ProgressionDatabase));
+                assetPaths.Add(AssetDatabase.GetAssetPath(imported.RunConfig));
+            }
+
             assetPaths.RemoveAll(string.IsNullOrWhiteSpace);
+            assetPaths = new List<string>(new HashSet<string>(assetPaths));
             AssetDatabase.ForceReserializeAssets(assetPaths);
         }
 

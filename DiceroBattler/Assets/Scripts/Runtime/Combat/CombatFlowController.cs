@@ -87,7 +87,7 @@ namespace DiceBattler.Runtime
             heroPresenter.SetHero(runSession.Hero);
             hudPresenter.HideDamageDealt();
             hudPresenter.HideDamageTaken();
-            hudPresenter.SetWave(runSession.CurrentWaveNumber, contentSet.runConfig.totalWaves);
+            hudPresenter.SetWave(runSession.CurrentWaveNumber, GetConfiguredTotalWaves());
             hudPresenter.SetLevel(runSession.CurrentLevel);
             RefreshExpHud();
             flowRoutine = StartCoroutine(RunFlow());
@@ -135,27 +135,34 @@ namespace DiceBattler.Runtime
             WaveConfig wave = contentSet.waveDatabase.GetWave(runSession.CurrentWaveNumber);
             if (wave == null)
             {
+                Debug.LogError($"Wave {runSession.CurrentWaveNumber} could not be found in WaveDatabase '{contentSet.waveDatabase.name}'.");
                 return;
             }
 
             List<FormationSlot> slots = ResolveFormationSlots(wave.mobIds.Count);
-            for (int index = 0; index < wave.mobIds.Count && index < enemyPresenters.Length; index++)
+            for (int index = 0; index < wave.mobIds.Count; index++)
             {
                 MobConfig mob = contentSet.mobDatabase.GetById(wave.mobIds[index]);
                 if (mob == null)
                 {
+                    Debug.LogError($"Wave {wave.waveNumber} references unresolved mob id '{wave.mobIds[index]}'.");
                     continue;
                 }
 
-                EnemyRuntimeUnit runtimeEnemy = new EnemyRuntimeUnit(mob, slots[index]);
+                FormationSlot slot = index < slots.Count ? slots[index] : FormationSlot.FrontCenter;
+                EnemyRuntimeUnit runtimeEnemy = new EnemyRuntimeUnit(mob, slot);
                 enemyIntentService.RollIntent(runtimeEnemy);
                 activeEnemies.Add(runtimeEnemy);
-                enemyPresenters[index].SetEnemy(runtimeEnemy);
-                enemyPresenters[index].SetVisible(true);
+
+                if (index < enemyPresenters.Length)
+                {
+                    enemyPresenters[index].SetEnemy(runtimeEnemy);
+                    enemyPresenters[index].SetVisible(true);
+                }
             }
 
             SyncEnemyPresenters();
-            hudPresenter.SetWave(runSession.CurrentWaveNumber, contentSet.runConfig.totalWaves);
+            hudPresenter.SetWave(runSession.CurrentWaveNumber, GetConfiguredTotalWaves());
         }
 
         private IEnumerator PlayerTurnLoop()
@@ -462,7 +469,20 @@ namespace DiceBattler.Runtime
 
         private bool IsFinalWave()
         {
-            return runSession.CurrentWaveNumber >= contentSet.runConfig.totalWaves;
+            return runSession.CurrentWaveNumber >= GetConfiguredTotalWaves();
+        }
+
+        private int GetConfiguredTotalWaves()
+        {
+            int runConfigCount = contentSet != null && contentSet.runConfig != null ? contentSet.runConfig.totalWaves : 0;
+            int waveDatabaseCount = 0;
+            if (contentSet != null && contentSet.waveDatabase != null)
+            {
+                int waveListCount = contentSet.waveDatabase.waves != null ? contentSet.waveDatabase.waves.Count : 0;
+                waveDatabaseCount = Mathf.Max(contentSet.waveDatabase.totalWaves, waveListCount);
+            }
+
+            return Mathf.Max(1, Mathf.Max(runConfigCount, waveDatabaseCount));
         }
 
         private EnemyPresenter FindPresenter(EnemyRuntimeUnit enemy)

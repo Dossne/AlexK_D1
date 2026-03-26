@@ -53,7 +53,8 @@ namespace DiceBattler.Configs
 
         public MobConfig GetById(string mobId)
         {
-            return mobs.Find(mob => mob != null && mob.mobId == mobId);
+            string normalizedId = string.IsNullOrWhiteSpace(mobId) ? string.Empty : mobId.Trim();
+            return mobs.Find(mob => mob != null && string.Equals(mob.mobId != null ? mob.mobId.Trim() : string.Empty, normalizedId, StringComparison.OrdinalIgnoreCase));
         }
     }
 
@@ -196,7 +197,7 @@ namespace DiceBattler.Configs
     {
         public string googleSheetUrl = "https://docs.google.com/spreadsheets/d/1ocPHKALVIMOhgBFsvG_mnZk3aFEVDNsVOsuQ9Y98wEQ/edit?usp=sharing";
         public string csvFolderPath = "Assets/Data/ImportedCsv";
-        public string outputFolderPath = "Assets/Configs/Imported";
+        public string outputFolderPath = "Assets/Resources/DiceBattler/Imported";
         public string spreadsheetId = "1ocPHKALVIMOhgBFsvG_mnZk3aFEVDNsVOsuQ9Y98wEQ";
         public List<GoogleSheetTabReference> sheetTabs = new List<GoogleSheetTabReference>
         {

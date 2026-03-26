@@ -12,13 +12,13 @@ MonoBehaviour:
   m_Script: {fileID: 0}
   m_Name: PrototypeContentSet
   m_EditorClassIdentifier: DiceBattler.Runtime:DiceBattler.Configs:PrototypeContentSet
-  heroConfig: {fileID: 11400000, guid: 14caf98894c12426ab049173a1caf0d0, type: 2}
-  mobDatabase: {fileID: 11400000, guid: 2d5a37353f7e8423aada3db6c49eabeb, type: 2}
-  waveDatabase: {fileID: 11400000, guid: 81ec5c139bbdc493b8e468f3404a917f, type: 2}
-  combinationDatabase: {fileID: 11400000, guid: 1c3dfe3dc23e5412c948297baa9a1efa, type: 2}
-  upgradeDatabase: {fileID: 11400000, guid: d0a10cf093bc34ee69c2d5fcc94d57bf, type: 2}
-  progressionDatabase: {fileID: 11400000, guid: 8bb8b4d756ce34d8db90f44ea1b5c0cb, type: 2}
-  runConfig: {fileID: 11400000, guid: 22a60f301b2604c36b772bd7b29ee5eb, type: 2}
+  heroConfig: {fileID: 11400000, guid: e2d020ddd405d4509bf0c73f567e6775, type: 2}
+  mobDatabase: {fileID: 11400000, guid: 6d1136957adcf49fc84c7e07c514aa14, type: 2}
+  waveDatabase: {fileID: 11400000, guid: 9bc35e7c448754120be9cde38b8c0c42, type: 2}
+  combinationDatabase: {fileID: 11400000, guid: eadc22ad8054b414bb2ac6db791dd7ec, type: 2}
+  upgradeDatabase: {fileID: 11400000, guid: 457b1524d65304e81be493740f980b3c, type: 2}
+  progressionDatabase: {fileID: 11400000, guid: a21bf29830fc5498eac61c5dc41588c1, type: 2}
+  runConfig: {fileID: 11400000, guid: 8f6f96cc43d1244099436c5b32e1ecdb, type: 2}
   heroPrefabRegistry: {fileID: 11400000, guid: 6a029245d2e634cf6ba2cdf2d75f7953, type: 2}
   mobPrefabRegistry: {fileID: 11400000, guid: 4340221f1442b40cc9154b66836ceeda, type: 2}
   uiSkinRegistry: {fileID: 11400000, guid: ec074be4f558f4665bbed03c012e33e4, type: 2}

@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using DiceBattler.Configs;
+using DiceBattler.Importing;
 using DiceBattler.Presentation;
 using UnityEngine;
 
@@ -7,6 +8,130 @@ namespace DiceBattler.Boot
 {
     public static class PrototypeRuntimeFactory
     {
+        public static PrototypeContentSet CreateImportedContentSet(ImportedGameData data, PrototypeContentSet registrySource = null)
+        {
+            if (data == null || data.hero == null || data.runConfig == null)
+            {
+                return null;
+            }
+
+            HeroConfig hero = ScriptableObject.CreateInstance<HeroConfig>();
+            hero.heroId = data.hero.id;
+            hero.displayName = data.hero.displayName;
+            hero.maxHp = data.hero.maxHp;
+            hero.startingUnlockedDice = data.hero.startingUnlockedDice;
+            hero.startingRerollsPerTurn = data.hero.startingRerollsPerTurn;
+            hero.startingFlatDamageBonus = data.hero.startingFlatDamageBonus;
+            hero.baseRunId = data.hero.baseRunId;
+
+            RunConfig runConfig = ScriptableObject.CreateInstance<RunConfig>();
+            runConfig.runId = data.runConfig.runId;
+            runConfig.totalWaves = data.runConfig.totalWaves;
+            runConfig.diceSlotsTotal = data.runConfig.diceSlotsTotal;
+            runConfig.rerollsPerTurnDefault = data.runConfig.rerollsPerTurnDefault;
+            runConfig.diceHighlightDuration = data.runConfig.diceHighlightDuration;
+            runConfig.postWaveRunTransitionDuration = data.runConfig.postWaveRunTransitionDuration;
+            runConfig.damagePanelDisplayDuration = data.runConfig.damagePanelDisplayDuration;
+            runConfig.showBonusWhenZero = data.runConfig.showBonusWhenZero;
+            runConfig.lockedDiceVisible = data.runConfig.lockedDiceVisible;
+
+            List<MobConfig> mobs = new List<MobConfig>(data.mobs.Count);
+            for (int index = 0; index < data.mobs.Count; index++)
+            {
+                MobRow row = data.mobs[index];
+                MobConfig mob = ScriptableObject.CreateInstance<MobConfig>();
+                mob.mobId = row.id;
+                mob.displayName = row.displayName;
+                mob.hp = row.hp;
+                mob.damageMin = row.damageMin;
+                mob.damageMax = row.damageMax;
+                mob.expReward = row.expReward;
+                mob.prefabKey = row.prefabKey;
+                mobs.Add(mob);
+            }
+
+            MobDatabase mobDatabase = ScriptableObject.CreateInstance<MobDatabase>();
+            mobDatabase.mobs = mobs;
+
+            List<WaveConfig> waves = new List<WaveConfig>(data.waves.Count);
+            for (int index = 0; index < data.waves.Count; index++)
+            {
+                WaveRow row = data.waves[index];
+                WaveConfig wave = ScriptableObject.CreateInstance<WaveConfig>();
+                wave.waveNumber = row.waveNumber;
+                wave.mobIds = new List<string>(row.mobList);
+                wave.expReward = row.expReward;
+                waves.Add(wave);
+            }
+
+            WaveDatabase waveDatabase = ScriptableObject.CreateInstance<WaveDatabase>();
+            waveDatabase.totalWaves = data.runConfig.totalWaves;
+            waveDatabase.waves = waves;
+
+            CombinationDatabase combinationDatabase = ScriptableObject.CreateInstance<CombinationDatabase>();
+            combinationDatabase.entries = new List<CombinationMultiplierEntry>(data.combinations.Count);
+            for (int index = 0; index < data.combinations.Count; index++)
+            {
+                CombinationRow row = data.combinations[index];
+                combinationDatabase.entries.Add(new CombinationMultiplierEntry
+                {
+                    combination = row.combination,
+                    oneDie = row.one,
+                    twoDice = row.two,
+                    threeDice = row.three,
+                    fourDice = row.four,
+                    fiveDice = row.five,
+                });
+            }
+
+            List<UpgradeConfig> upgrades = new List<UpgradeConfig>(data.upgrades.Count);
+            for (int index = 0; index < data.upgrades.Count; index++)
+            {
+                UpgradeRow row = data.upgrades[index];
+                UpgradeConfig upgrade = ScriptableObject.CreateInstance<UpgradeConfig>();
+                upgrade.upgradeId = row.id;
+                upgrade.type = row.type;
+                upgrade.title = row.title;
+                upgrade.description = row.description;
+                upgrade.value = row.value;
+                upgrade.eligibleFromLevel = row.eligibleFromLevel;
+                upgrade.enabled = row.enabled;
+                upgrade.targetDiceCount = row.targetDiceCount;
+                upgrade.uiIconKey = row.uiIconKey;
+                upgrades.Add(upgrade);
+            }
+
+            UpgradeDatabase upgradeDatabase = ScriptableObject.CreateInstance<UpgradeDatabase>();
+            upgradeDatabase.upgrades = upgrades;
+
+            ProgressionDatabase progressionDatabase = ScriptableObject.CreateInstance<ProgressionDatabase>();
+            progressionDatabase.levels = new List<ProgressionLevelEntry>(data.progression.Count);
+            for (int index = 0; index < data.progression.Count; index++)
+            {
+                ProgressionRow row = data.progression[index];
+                progressionDatabase.levels.Add(new ProgressionLevelEntry
+                {
+                    level = row.level,
+                    expToNext = row.expToNext,
+                });
+            }
+
+            PrototypeContentSet contentSet = ScriptableObject.CreateInstance<PrototypeContentSet>();
+            contentSet.name = "ImportedSnapshotContentSet";
+            contentSet.heroConfig = hero;
+            contentSet.mobDatabase = mobDatabase;
+            contentSet.waveDatabase = waveDatabase;
+            contentSet.combinationDatabase = combinationDatabase;
+            contentSet.upgradeDatabase = upgradeDatabase;
+            contentSet.progressionDatabase = progressionDatabase;
+            contentSet.runConfig = runConfig;
+            contentSet.heroPrefabRegistry = registrySource != null ? registrySource.heroPrefabRegistry : ScriptableObject.CreateInstance<HeroPrefabRegistry>();
+            contentSet.mobPrefabRegistry = registrySource != null ? registrySource.mobPrefabRegistry : ScriptableObject.CreateInstance<MobPrefabRegistry>();
+            contentSet.uiSkinRegistry = registrySource != null ? registrySource.uiSkinRegistry : ScriptableObject.CreateInstance<UISkinRegistry>();
+            contentSet.vfxRegistry = registrySource != null ? registrySource.vfxRegistry : ScriptableObject.CreateInstance<VfxRegistry>();
+            return contentSet;
+        }
+
         public static PrototypeContentSet CreateInMemoryContentSet()
         {
             HeroConfig hero = ScriptableObject.CreateInstance<HeroConfig>();

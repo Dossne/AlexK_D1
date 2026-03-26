@@ -12,36 +12,4 @@ MonoBehaviour:
   m_Script: {fileID: 0}
   m_Name: MobPrefabRegistry
   m_EditorClassIdentifier: DiceBattler.Runtime:DiceBattler.Presentation:MobPrefabRegistry
-  entries:
-  - prefabKey: slime_green
-    presenterPrefab: {fileID: 0}
-  - prefabKey: slime_blue
-    presenterPrefab: {fileID: 0}
-  - prefabKey: slime_red
-    presenterPrefab: {fileID: 0}
-  - prefabKey: goblin_melee
-    presenterPrefab: {fileID: 0}
-  - prefabKey: goblin_archer
-    presenterPrefab: {fileID: 0}
-  - prefabKey: wolf
-    presenterPrefab: {fileID: 0}
-  - prefabKey: skeleton
-    presenterPrefab: {fileID: 0}
-  - prefabKey: skeleton_archer
-    presenterPrefab: {fileID: 0}
-  - prefabKey: orc_grunt
-    presenterPrefab: {fileID: 0}
-  - prefabKey: orc_shaman
-    presenterPrefab: {fileID: 0}
-  - prefabKey: bandit
-    presenterPrefab: {fileID: 0}
-  - prefabKey: bandit_leader
-    presenterPrefab: {fileID: 0}
-  - prefabKey: yeti_small
-    presenterPrefab: {fileID: 0}
-  - prefabKey: yeti_large
-    presenterPrefab: {fileID: 0}
-  - prefabKey: demon_imp
-    presenterPrefab: {fileID: 0}
-  - prefabKey: boss_ogre
-    presenterPrefab: {fileID: 0}
+  entries: []
